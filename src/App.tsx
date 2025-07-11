@@ -2,33 +2,36 @@ import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { setMobileConfig } from './wtnSlice'
 
+// Extend the Window interface for handleMobileConfig
+declare global {
+  interface Window {
+    handleMobileConfig?: (config: { isMobileApp: boolean; platform: string }) => void;
+  }
+}
+
 function App() {
   const dispatch = useDispatch();
   const { isMobileApp, platform } = useSelector((state: any) => state.wtn);
 
-  const handleMobileConfig = (config: { isMobileApp: boolean; platform: string }) => {
-    const validPlatforms = ['android', 'ios'];
-    if (
-      typeof config.isMobileApp === 'boolean' &&
-      validPlatforms.includes(config.platform.toLowerCase())
-    ) {
-      dispatch(setMobileConfig({
-        isMobileApp: config.isMobileApp,
-        platform: config.platform.toLowerCase(),
-      }));
-    } else {
-      alert('Invalid config: platform must be "android" or "ios" and isMobileApp must be a boolean.');
-    }
-  };
-
   useEffect(() => {
-    // @ts-ignore
-    window.handleMobileConfig = handleMobileConfig;
+    window.handleMobileConfig = (config: { isMobileApp: boolean; platform: string }) => {
+      const validPlatforms = ['android', 'ios'];
+      if (
+        typeof config.isMobileApp === 'boolean' &&
+        validPlatforms.includes((config.platform || '').toLowerCase())
+      ) {
+        dispatch(setMobileConfig({
+          isMobileApp: config.isMobileApp,
+          platform: config.platform.toLowerCase(),
+        }));
+      } else {
+        alert('Invalid config: platform must be "android" or "ios" and isMobileApp must be a boolean.');
+      }
+    };
     return () => {
-      // @ts-ignore
       delete window.handleMobileConfig;
     };
-  }, []);
+  }, [dispatch]);
 
   return (
     <div style={{
