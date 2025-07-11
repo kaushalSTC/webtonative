@@ -8,24 +8,23 @@
                 banner = document.createElement('div');
                 banner.id = 'android-debug-banner';
                 banner.style.position = 'fixed';
-                banner.style.bottom = '0';
-                banner.style.left = '0';
-                banner.style.width = '100%';
-                banner.style.background = 'rgba(0,0,0,0.8)';
+                banner.style.top = '50%';
+                banner.style.left = '50%';
+                banner.style.transform = 'translate(-50%, -50%)';
+                banner.style.background = 'rgba(0,0,0,0.85)';
                 banner.style.color = '#fff';
                 banner.style.zIndex = '9999';
-                banner.style.padding = '8px';
-                banner.style.fontSize = '14px';
+                banner.style.padding = '16px 24px';
+                banner.style.fontSize = '16px';
                 banner.style.textAlign = 'center';
+                banner.style.borderRadius = '12px';
+                banner.style.maxWidth = '90vw';
+                banner.style.boxShadow = '0 4px 24px rgba(0,0,0,0.18)';
                 document.body.appendChild(banner);
             }
             banner.textContent = msg;
         } catch (e) {}
     }
-
-    try {
-        showDebugBanner('Android override script is running');
-    } catch (e) {}
 
     function setAndroidMobileConfigIfAvailable() {
         try {
@@ -41,7 +40,7 @@
         }
     }
 
-    async function runAllOverrides() {
+    function runAllOverrides() {
         try {
             setAndroidMobileConfigIfAvailable();
         } catch (e) {
@@ -50,29 +49,10 @@
     }
 
     try {
+        showDebugBanner('Android override script is running');
         runAllOverrides();
     } catch (e) {
         showDebugBanner('Error running initial overrides: ' + e);
-    }
-
-    try {
-        var observer = new MutationObserver(function(mutations) {
-            try {
-                mutations.forEach(function(mutation) {
-                    if (mutation.addedNodes.length) {
-                        runAllOverrides();
-                    }
-                });
-            } catch (e) {
-                showDebugBanner('Error in MutationObserver: ' + e);
-            }
-        });
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    } catch (e) {
-        showDebugBanner('Error setting up MutationObserver: ' + e);
     }
 
     try {
