@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setMobileConfig } from './wtnSlice';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate, Navigate, useLocation } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -271,6 +271,7 @@ const MobileAppUI: React.FC<{ platform: string }> = ({ platform }) => {
           <Route path="/" element={<Home />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Box>
       <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
@@ -310,6 +311,14 @@ const NotAvailable: React.FC<{ platform: string }> = ({ platform }) => (
   </Box>
 );
 
+const NotAvailableRoutes: React.FC<{ platform: string }> = ({ platform }) => {
+  const location = useLocation();
+  if (location.pathname !== '/') {
+    return <Navigate to="/" replace />;
+  }
+  return <NotAvailable platform={platform} />;
+};
+
 const MainContainer: React.FC = () => {
   const dispatch = useDispatch();
   const { isMobileApp, platform } = useSelector((state: any) => state.wtn);
@@ -343,7 +352,13 @@ const MainContainer: React.FC = () => {
   }, [dispatch]);
 
   if (!isMobileApp) {
-    return <NotAvailable platform={platform} />;
+    return (
+      <BrowserRouter>
+        <Routes>
+          <Route path="/*" element={<NotAvailableRoutes platform={platform} />} />
+        </Routes>
+      </BrowserRouter>
+    );
   }
 
   // Remove overlays or banners for android platform
