@@ -24,6 +24,10 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import Snackbar from '@mui/material/Snackbar';
 import Stack from '@mui/material/Stack';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
 
 // Extend the Window interface for handleMobileConfig and WTN
 declare global {
@@ -156,11 +160,76 @@ function useCloseAppButton() {
   return { button, snackbarEl };
 }
 
+function usePrintingButtons() {
+  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [printSize, setPrintSize] = useState("ISO_A4");
+
+  const handlePrint = async () => {
+    if (
+      window.WTN &&
+      window.WTN.Printing &&
+      typeof window.WTN.Printing.setPrintSize === "function" &&
+      typeof window.WTN.printFunction === "function"
+    ) {
+      try {
+        await window.WTN.Printing.setPrintSize({
+          printSize,
+          label: printSize.replace('_', ' ')
+        });
+        await window.WTN.printFunction({
+          type: "html",
+          url: "<h1>Hello, Print!</h1>"
+        });
+        setSnackbar({ open: true, message: `Print size set to ${printSize} and print function called` });
+      } catch (e) {
+        setSnackbar({ open: true, message: "Printing API error" });
+      }
+    } else {
+      setSnackbar({ open: true, message: "Printing API not available" });
+    }
+  };
+
+  const snackbarEl = (
+    <Snackbar
+      open={snackbar.open}
+      autoHideDuration={3000}
+      onClose={() => setSnackbar({ open: false, message: "" })}
+      message={snackbar.message}
+      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+    />
+  );
+
+  return {
+    printingButtons: (
+      <Stack direction="row" spacing={2} sx={{ mt: 2, justifyContent: "center", alignItems: 'center' }}>
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="print-size-label">Print Size</InputLabel>
+          <Select
+            labelId="print-size-label"
+            value={printSize}
+            label="Print Size"
+            onChange={e => setPrintSize(e.target.value)}
+          >
+            <MenuItem value="ISO_A4">ISO_A4</MenuItem>
+            <MenuItem value="ISO_B1">ISO_B1</MenuItem>
+            <MenuItem value="JIS_B3">JIS_B3</MenuItem>
+          </Select>
+        </FormControl>
+        <Button variant="contained" onClick={handlePrint}>
+          Print (HTML)
+        </Button>
+      </Stack>
+    ),
+    snackbarEl
+  };
+}
+
 // In each screen, render {closeAppButton} and {closeAppSnackbar} below the other buttons
 const Home = () => {
   const { button, dialog, infoBox } = useDeviceInfoDialog();
   const { buttons, snackbarEl } = useClearCacheButtons();
   const { button: closeAppButton, snackbarEl: closeAppSnackbar } = useCloseAppButton();
+  const { printingButtons, snackbarEl: printSnackbar } = usePrintingButtons();
   return (
     <Box p={3}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4, textAlign: 'center', background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)' }}>
@@ -173,10 +242,12 @@ const Home = () => {
         {button}
         {buttons}
         {closeAppButton}
+        {printingButtons}
         {infoBox}
         {dialog}
         {snackbarEl}
         {closeAppSnackbar}
+        {printSnackbar}
       </Paper>
     </Box>
   );
@@ -185,6 +256,7 @@ const Profile = () => {
   const { button, dialog, infoBox } = useDeviceInfoDialog();
   const { buttons, snackbarEl } = useClearCacheButtons();
   const { button: closeAppButton, snackbarEl: closeAppSnackbar } = useCloseAppButton();
+  const { printingButtons, snackbarEl: printSnackbar } = usePrintingButtons();
   return (
     <Box p={3}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4, textAlign: 'center', background: 'linear-gradient(135deg, #fdf6e3 0%, #f5e8c7 100%)' }}>
@@ -197,10 +269,12 @@ const Profile = () => {
         {button}
         {buttons}
         {closeAppButton}
+        {printingButtons}
         {infoBox}
         {dialog}
         {snackbarEl}
         {closeAppSnackbar}
+        {printSnackbar}
       </Paper>
     </Box>
   );
@@ -209,6 +283,7 @@ const Settings = () => {
   const { button, dialog, infoBox } = useDeviceInfoDialog();
   const { buttons, snackbarEl } = useClearCacheButtons();
   const { button: closeAppButton, snackbarEl: closeAppSnackbar } = useCloseAppButton();
+  const { printingButtons, snackbarEl: printSnackbar } = usePrintingButtons();
   return (
     <Box p={3}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4, textAlign: 'center', background: 'linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%)' }}>
@@ -221,10 +296,12 @@ const Settings = () => {
         {button}
         {buttons}
         {closeAppButton}
+        {printingButtons}
         {infoBox}
         {dialog}
         {snackbarEl}
         {closeAppSnackbar}
+        {printSnackbar}
       </Paper>
     </Box>
   );
