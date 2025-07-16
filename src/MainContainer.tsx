@@ -156,6 +156,12 @@ function useCloseAppButton() {
   return { button, snackbarEl };
 }
 
+function applyBodySafeAreaPadding() {
+  const safeAreaPadding = window.innerHeight * 0.018;
+  document.body.style.paddingBottom = `${safeAreaPadding}px`;
+  return safeAreaPadding;
+}
+
 // In each screen, render {closeAppButton} and {closeAppSnackbar} below the other buttons
 const Home = () => {
   const { button, dialog, infoBox } = useDeviceInfoDialog();
@@ -230,9 +236,10 @@ const Settings = () => {
   );
 };
 
-const MobileAppUI: React.FC<{ platform: string }> = ({ platform }) => {
+const MobileAppUI: React.FC<{ platform: string; needsSafeArea?: boolean }> = ({ platform, needsSafeArea }) => {
   const [nav, setNav] = React.useState(0);
   const navigate = useNavigate();
+  const bottomNavRef = React.useRef<HTMLDivElement>(null);
 
   // Remote routing support
   useEffect(() => {
@@ -250,6 +257,22 @@ const MobileAppUI: React.FC<{ platform: string }> = ({ platform }) => {
     if (nav === 2) navigate('/settings');
     // eslint-disable-next-line
   }, [nav]);
+
+  // Apply safe area padding to bottom nav if needed
+  useEffect(() => {
+    if (needsSafeArea && bottomNavRef.current) {
+      const updatePadding = () => {
+        const safeAreaPadding = window.innerHeight * 0.018;
+        bottomNavRef.current!.style.paddingBottom = `${safeAreaPadding}px`;
+      };
+      updatePadding();
+      window.addEventListener('resize', updatePadding);
+      return () => {
+        window.removeEventListener('resize', updatePadding);
+        if (bottomNavRef.current) bottomNavRef.current.style.paddingBottom = '';
+      };
+    }
+  }, [needsSafeArea]);
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
@@ -274,7 +297,10 @@ const MobileAppUI: React.FC<{ platform: string }> = ({ platform }) => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Box>
-      <Box sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
+      <Box
+        ref={bottomNavRef}
+        sx={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}
+      >
         <BottomNavigation
           showLabels
           value={nav}
@@ -351,6 +377,9 @@ const MainContainer: React.FC = () => {
     };
   }, [dispatch]);
 
+  // Only pass safe area prop for iOS mobile app
+  const needsSafeArea = isMobileApp && platform === 'ios';
+
   if (!isMobileApp) {
     return (
       <BrowserRouter>
@@ -369,7 +398,7 @@ const MainContainer: React.FC = () => {
 
   return (
     <BrowserRouter>
-      <MobileAppUI platform={platform} />
+      <MobileAppUI platform={platform} needsSafeArea={needsSafeArea} />
     </BrowserRouter>
   );
 };
