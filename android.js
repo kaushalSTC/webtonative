@@ -1,10 +1,12 @@
 (function() {
     'use strict';
 
+    const SECRET = 'Wt0U10qzMTW72eJG2b7XL6dqYXrZbwg694hHmfPZ0DPjPmiqqC0t64aygaUvb';
+
     function setAndroidMobileConfigIfAvailable(retries = 20) {
         try {
             if (typeof window.handleMobileConfig === 'function' && !window.handleMobileConfigSet) {
-                var result = window.handleMobileConfig({ isMobileApp: true, platform: 'android' });
+                const result = window.handleMobileConfig({ isMobileApp: true, platform: 'android', secret: SECRET });
                 if (result) {
                     window.handleMobileConfigSet = true;
                     window.androidPlatform = true;

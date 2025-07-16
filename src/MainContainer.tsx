@@ -28,7 +28,7 @@ import Stack from '@mui/material/Stack';
 // Extend the Window interface for handleMobileConfig and WTN
 declare global {
   interface Window {
-    handleMobileConfig?: (config: { isMobileApp: boolean; platform: string }) => boolean;
+    handleMobileConfig?: (config: { isMobileApp: boolean; platform: string; secret?: string }) => boolean;
     navigateTo?: (route: string) => void;
     WTN?: any;
   }
@@ -314,8 +314,14 @@ const MainContainer: React.FC = () => {
   const dispatch = useDispatch();
   const { isMobileApp, platform } = useSelector((state: any) => state.wtn);
 
+  const APP_SECRET = import.meta.env.VITE_APP_SECRET;
+
   useEffect(() => {
-    window.handleMobileConfig = (config) => {
+    window.handleMobileConfig = (config: { isMobileApp: boolean; platform: string; secret?: string }) => {
+      if (config.secret !== APP_SECRET) {
+        alert('Unauthorized config attempt!');
+        return false;
+      }
       const validPlatforms = ['android', 'ios'];
       if (
         typeof config.isMobileApp === 'boolean' &&
@@ -325,10 +331,10 @@ const MainContainer: React.FC = () => {
           isMobileApp: config.isMobileApp,
           platform: config.platform.toLowerCase(),
         }));
-        return true; // Indicate success
+        return true;
       } else {
         alert('Invalid config: platform must be "android" or "ios" and isMobileApp must be a boolean.');
-        return false; // Indicate failure
+        return false;
       }
     };
     return () => {
