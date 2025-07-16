@@ -28,6 +28,8 @@ import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
+import IconButton from '@mui/material/IconButton';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Extend the Window interface for handleMobileConfig and WTN
 declare global {
@@ -176,9 +178,10 @@ function usePrintingButtons() {
           printSize,
           label: printSize.replace('_', ' ')
         });
+        const htmlToPrint = document.body.innerHTML;
         await window.WTN.printFunction({
           type: "html",
-          url: "<h1>Hello, Print!</h1>"
+          url: htmlToPrint
         });
         setSnackbar({ open: true, message: `Print size set to ${printSize} and print function called` });
       } catch (e) {
@@ -427,6 +430,7 @@ const MainContainer: React.FC = () => {
   const { isMobileApp, platform } = useSelector((state: any) => state.wtn);
 
   const APP_SECRET = import.meta.env.VITE_APP_SECRET;
+  const [showFirstLoadModal, setShowFirstLoadModal] = useState(false);
 
   useEffect(() => {
     window.handleMobileConfig = (config: { isMobileApp: boolean; platform: string; secret?: string }) => {
@@ -466,29 +470,106 @@ const MainContainer: React.FC = () => {
     }
   }, [isMobileApp]);
 
+  // Show beautiful modal on first app launch
+  useEffect(() => {
+    let cancelled = false;
+    if (isMobileApp && window.WTN && typeof window.WTN.appFirstLoad === 'function') {
+      window.WTN.appFirstLoad().then((value: any) => {
+        if (!cancelled && value && value.result === true) {
+          setShowFirstLoadModal(true);
+        }
+      });
+    }
+    return () => { cancelled = true; };
+  }, [isMobileApp]);
+
   // Only pass safe area prop for iOS mobile app
   const needsSafeArea = isMobileApp && platform === 'ios';
 
-  if (!isMobileApp) {
-    return (
-      <BrowserRouter>
-        <Routes>
-          <Route path="/*" element={<NotAvailableRoutes platform={platform} />} />
-        </Routes>
-      </BrowserRouter>
-    );
-  }
-
-  // Remove overlays or banners for android platform
-  if (platform === 'android') {
-    const banner = document.getElementById('android-debug-banner');
-    if (banner) banner.remove();
-  }
-
   return (
-    <BrowserRouter>
-      <MobileAppUI platform={platform} needsSafeArea={needsSafeArea} />
-    </BrowserRouter>
+    <>
+      {showFirstLoadModal && (
+        <Dialog
+          open={showFirstLoadModal}
+          onClose={() => setShowFirstLoadModal(false)}
+          maxWidth="xs"
+          fullWidth
+          PaperProps={{
+            sx: {
+              background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)',
+              borderRadius: 4,
+              boxShadow: 8,
+              overflow: 'visible',
+              position: 'relative',
+            }
+          }}
+        >
+          <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 0, fontWeight: 700, fontSize: 22, letterSpacing: 1 }}>
+            <span style={{ color: '#6366f1' }}>Welcome!</span>
+            <IconButton onClick={() => setShowFirstLoadModal(false)} size="small">
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ textAlign: 'center', pt: 1, pb: 0 }}>
+            {/* Confetti effect using emoji */}
+            <Box sx={{ fontSize: 32, mb: 1, userSelect: 'none' }}>🎊🎉✨</Box>
+            <img
+              src="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f389.png"
+              alt="Party"
+              width={96}
+              height={96}
+              style={{ marginBottom: 16, marginTop: 8, filter: 'drop-shadow(0 4px 16px #6366f1aa)' }}
+            />
+            <Typography variant="h4" fontWeight={800} gutterBottom sx={{ color: '#3730a3', letterSpacing: 1 }}>
+              App Launched!
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ fontSize: 18, mb: 2 }}>
+              Welcome to the app.<br />
+              <span style={{ color: '#6366f1', fontWeight: 600 }}>This is your first launch of this session.</span><br />
+              <span style={{ fontSize: 20 }}>Enjoy your experience! <span role="img" aria-label="confetti">🎊</span></span>
+            </Typography>
+          </DialogContent>
+          <DialogActions sx={{ justifyContent: 'center', pb: 3, pt: 0 }}>
+            <Button
+              variant="contained"
+              color="primary"
+              size="large"
+              onClick={() => setShowFirstLoadModal(false)}
+              sx={{
+                px: 5,
+                py: 1.5,
+                borderRadius: 3,
+                fontWeight: 700,
+                fontSize: 18,
+                background: 'linear-gradient(90deg, #6366f1 0%, #60a5fa 100%)',
+                boxShadow: '0 4px 16px #6366f155',
+                textTransform: 'none',
+                '&:hover': {
+                  background: 'linear-gradient(90deg, #60a5fa 0%, #6366f1 100%)',
+                }
+              }}
+            >
+              Get Started
+            </Button>
+          </DialogActions>
+          {/* Extra confetti at the bottom */}
+          <Box sx={{ position: 'absolute', left: 0, right: 0, bottom: -24, textAlign: 'center', fontSize: 28, pointerEvents: 'none' }}>
+            🎉✨🎊
+          </Box>
+        </Dialog>
+      )}
+      {(!isMobileApp) ? (
+        <BrowserRouter>
+          <Routes>
+            <Route path="/*" element={<NotAvailableRoutes platform={platform} />} />
+          </Routes>
+        </BrowserRouter>
+      ) : (
+        <BrowserRouter>
+          <MobileAppUI platform={platform} needsSafeArea={isMobileApp && platform === 'ios'} />
+        </BrowserRouter>
+      )}
+    </>
   );
 };
 
