@@ -156,12 +156,6 @@ function useCloseAppButton() {
   return { button, snackbarEl };
 }
 
-function applyBodySafeAreaPadding() {
-  const safeAreaPadding = window.innerHeight * 0.018;
-  document.body.style.paddingBottom = `${safeAreaPadding}px`;
-  return safeAreaPadding;
-}
-
 // In each screen, render {closeAppButton} and {closeAppSnackbar} below the other buttons
 const Home = () => {
   const { button, dialog, infoBox } = useDeviceInfoDialog();
