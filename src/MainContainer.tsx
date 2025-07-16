@@ -230,6 +230,8 @@ const Home = () => {
   const { buttons, snackbarEl } = useClearCacheButtons();
   const { button: closeAppButton, snackbarEl: closeAppSnackbar } = useCloseAppButton();
   const { printingButtons, snackbarEl: printSnackbar } = usePrintingButtons();
+  const { isMobileApp, platform } = useSelector((state: any) => state.wtn);
+  const showPrint = isMobileApp && platform !== "ios";
   return (
     <Box p={3}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4, textAlign: 'center', background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)' }}>
@@ -242,12 +244,12 @@ const Home = () => {
         {button}
         {buttons}
         {closeAppButton}
-        {printingButtons}
+        {showPrint && printingButtons}
         {infoBox}
         {dialog}
         {snackbarEl}
         {closeAppSnackbar}
-        {printSnackbar}
+        {showPrint && printSnackbar}
       </Paper>
     </Box>
   );
@@ -257,6 +259,8 @@ const Profile = () => {
   const { buttons, snackbarEl } = useClearCacheButtons();
   const { button: closeAppButton, snackbarEl: closeAppSnackbar } = useCloseAppButton();
   const { printingButtons, snackbarEl: printSnackbar } = usePrintingButtons();
+  const { isMobileApp, platform } = useSelector((state: any) => state.wtn);
+  const showPrint = isMobileApp && platform !== "ios";
   return (
     <Box p={3}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4, textAlign: 'center', background: 'linear-gradient(135deg, #fdf6e3 0%, #f5e8c7 100%)' }}>
@@ -269,12 +273,12 @@ const Profile = () => {
         {button}
         {buttons}
         {closeAppButton}
-        {printingButtons}
+        {showPrint && printingButtons}
         {infoBox}
         {dialog}
         {snackbarEl}
         {closeAppSnackbar}
-        {printSnackbar}
+        {showPrint && printSnackbar}
       </Paper>
     </Box>
   );
@@ -284,6 +288,8 @@ const Settings = () => {
   const { buttons, snackbarEl } = useClearCacheButtons();
   const { button: closeAppButton, snackbarEl: closeAppSnackbar } = useCloseAppButton();
   const { printingButtons, snackbarEl: printSnackbar } = usePrintingButtons();
+  const { isMobileApp, platform } = useSelector((state: any) => state.wtn);
+  const showPrint = isMobileApp && platform !== "ios";
   return (
     <Box p={3}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 4, textAlign: 'center', background: 'linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%)' }}>
@@ -296,12 +302,12 @@ const Settings = () => {
         {button}
         {buttons}
         {closeAppButton}
-        {printingButtons}
+        {showPrint && printingButtons}
         {infoBox}
         {dialog}
         {snackbarEl}
         {closeAppSnackbar}
-        {printSnackbar}
+        {showPrint && printSnackbar}
       </Paper>
     </Box>
   );
@@ -447,6 +453,18 @@ const MainContainer: React.FC = () => {
       delete window.handleMobileConfig;
     };
   }, [dispatch]);
+
+  // Enable pull to refresh for mobile app
+  useEffect(() => {
+    if (isMobileApp && window.WTN && typeof window.WTN.enablePullToRefresh === 'function') {
+      window.WTN.enablePullToRefresh(true);
+      return () => {
+        window.WTN.enablePullToRefresh(false);
+      };
+    } else if (window.WTN && typeof window.WTN.enablePullToRefresh === 'function') {
+      window.WTN.enablePullToRefresh(false);
+    }
+  }, [isMobileApp]);
 
   // Only pass safe area prop for iOS mobile app
   const needsSafeArea = isMobileApp && platform === 'ios';
