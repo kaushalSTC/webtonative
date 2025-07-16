@@ -566,7 +566,7 @@ const MainContainer: React.FC = () => {
         </BrowserRouter>
       ) : (
         <BrowserRouter>
-          <MobileAppUI platform={platform} needsSafeArea={isMobileApp && platform === 'ios'} />
+          <MobileAppUI platform={platform} needsSafeArea={needsSafeArea} />
         </BrowserRouter>
       )}
     </>
