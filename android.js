@@ -1,22 +1,30 @@
 (function() {
     'use strict';
 
-    function setAndroidMobileConfigIfAvailable() {
+    function setAndroidMobileConfigIfAvailable(retries = 20) {
         try {
             if (typeof window.handleMobileConfig === 'function' && !window.handleMobileConfigSet) {
-                window.handleMobileConfig({ isMobileApp: true, platform: 'android' });
-                window.handleMobileConfigSet = true;
-                window.androidPlatform = true;
+                var result = window.handleMobileConfig({ isMobileApp: true, platform: 'android' });
+                if (result) {
+                    window.handleMobileConfigSet = true;
+                    window.androidPlatform = true;
+                } else if (retries > 0) {
+                    setTimeout(function() {
+                        setAndroidMobileConfigIfAvailable(retries - 1);
+                    }, 200);
+                }
+            } else if (retries > 0 && !window.handleMobileConfigSet) {
+                setTimeout(function() {
+                    setAndroidMobileConfigIfAvailable(retries - 1);
+                }, 200);
             }
-        } catch (err) {
-        }
+        } catch (err) {}
     }
 
     function runAllOverrides() {
         try {
             setAndroidMobileConfigIfAvailable();
-        } catch (e) {
-        }
+        } catch (e) {}
     }
 
     function onLoadHandler() {
@@ -41,10 +49,10 @@
         } catch (e) {}
     }
 
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    if (document.readyState === 'complete') {
         setTimeout(onLoadHandler, 0);
     } else {
-        window.addEventListener('DOMContentLoaded', onLoadHandler);
+        window.addEventListener('load', onLoadHandler);
     }
 
 })(); 
