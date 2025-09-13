@@ -280,7 +280,9 @@ function App() {
 
 
   if(platform === "android") {
-    <p>Hello World</p>
+    return(
+      <p>Hello World</p>
+    )
   }
 
   return <RouterProvider router={router} />;
