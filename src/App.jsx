@@ -250,6 +250,7 @@ const router = createBrowserRouter([
 function App() {
   const dispatch = useDispatch();
   useEffect(() => {
+    alert("Use Effect Triggerred");
     window.handleMobileConfig = (platform) => {
       try {
         if (window.handleMobileConfigSet) {

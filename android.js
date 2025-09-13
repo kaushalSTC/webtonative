@@ -609,15 +609,20 @@
     function setMobilePlatformConfigIfAvailable(platform, retries = 20) {
         try {
             if (window.handleMobileConfigSet) return;
-            if (typeof window.handleMobileConfig === 'function' && !window.handleMobileConfigSet) {
-                window.handleMobileConfig(platform);
-            } 
-            
-            if (retries > 0 && !window.handleMobileConfigSet) {
+            if (typeof window.handleMobileConfig === 'function') {
+                const result = window.handleMobileConfig(platform);
+                if (result) {
+                    window.handleMobileConfigSet = true;
+                    window.mobilePlatform = platform;
+                    return;
+                }
+            }
+            if (retries > 0) {
                 setTimeout(() => setMobilePlatformConfigIfAvailable(platform, retries - 1), 200);
             }
         } catch (err) {}
     }
+
 
 
     async function runAllOverrides() {
@@ -633,9 +638,7 @@
         await replaceInstagramLinkWithDiv();
         await applyVenueButtonOverridesAndroid();
         await addMarginToTournamentChild();
-        if (!window.handleMobileConfigSet) {
-            await setMobilePlatformConfigIfAvailable('android', 20);
-        }
+        await setMobilePlatformConfigIfAvailable('android', 20);
     }
 
     runAllOverrides();

@@ -1,0 +1,12 @@
+await loadWebToNative();
+        await updateNavigationContainerLayout();
+        await replaceNewsAndUpdatesLinksWithDivs();
+        await toggleFooterDisplay();
+        await makeEmailClickable();
+        await addMarginToAlsoHappeningContainer();
+        await disableInputAutofill();
+        await removeCommunityHeader();
+        await interceptLocationButtons();
+        await replaceInstagramLinkWithDiv();
+        await applyVenueButtonOverridesAndroid();
+        await addMarginToTournamentChild();
