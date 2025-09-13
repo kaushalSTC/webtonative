@@ -63,33 +63,6 @@
         });
     }
 
-
-    function addMarginToTournamentChild() {
-        try {
-            if (!window.location.href.toLowerCase().includes('tournaments')) return;
-
-            const tabs = ["Schedule", "Results", "Standings"];
-            const buttons = Array.from(document.querySelectorAll("button"));
-
-            for (let btn of buttons) {
-                const text = btn.textContent.trim();
-                if (tabs.includes(text)) {
-                    const tabsWrapper = btn.parentElement;
-                    if (tabsWrapper && tabsWrapper.parentElement) {
-                        const parent = tabsWrapper.parentElement;
-                        const childDivs = parent.querySelectorAll(":scope > div");
-                        if (childDivs.length > 1) {
-                            const firstChildAfterTabs = childDivs[1];
-                            firstChildAfterTabs.style.marginBottom = "100px";
-                        }
-                    }
-                    break;
-                }
-            }
-        } catch (e) {}
-    }
-
-
     let isFooterDisplayToggled = false;
     let isEmailClickable = false;
     let isNavBorderFixed = false;
@@ -375,21 +348,50 @@
         } catch (e) {}
     }
 
-        function setMobilePlatformConfigIfAvailable(platform, retries = 20) {
+    function addMarginToTournamentChild() {
+        try {
+            if (!window.location.href.toLowerCase().includes('tournaments')) return;
+
+            const tabs = ["Schedule", "Results", "Standings"];
+            const buttons = Array.from(document.querySelectorAll("button"));
+
+            for (let btn of buttons) {
+                const text = btn.textContent.trim();
+                if (tabs.includes(text)) {
+                    const tabsWrapper = btn.parentElement;
+                    if (tabsWrapper && tabsWrapper.parentElement) {
+                        const parent = tabsWrapper.parentElement;
+                        const childDivs = parent.querySelectorAll(":scope > div");
+                        if (childDivs.length > 1) {
+                            const firstChildAfterTabs = childDivs[1];
+                            firstChildAfterTabs.style.marginBottom = "100px";
+                        }
+                    }
+                    break;
+                }
+            }
+        } catch (e) {}
+    }
+
+    function setMobilePlatformConfigIfAvailable(platform, retries = 20) {
         try {
             if (window.handleMobileConfigSet) return;
-            if (typeof window.handleMobileConfig === 'function' && !window.handleMobileConfigSet) {
-                window.handleMobileConfig(platform);
-            } 
-            
-            if (retries > 0 && !window.handleMobileConfigSet) {
+            if (typeof window.handleMobileConfig === 'function') {
+                const result = window.handleMobileConfig(platform);
+                if (result) {
+                    window.handleMobileConfigSet = true;
+                    window.mobilePlatform = platform;
+                    return;
+                }
+            }
+            if (retries > 0) {
                 setTimeout(() => setMobilePlatformConfigIfAvailable(platform, retries - 1), 200);
             }
         } catch (err) {}
     }
 
-
     async function runAllOverrides() {
+        await setMobilePlatformConfigIfAvailable('ios', 20);
         await loadWebToNative();
         await updateNavigationContainerLayout();
         await toggleFooterDisplay();
@@ -405,9 +407,6 @@
         await appendLoadInParamToInstagramLinkIOS();
         applyVenueButtonOverridesIOS();
         await addMarginToTournamentChild();
-        if (!window.handleMobileConfigSet) {
-            await setMobilePlatformConfigIfAvailable('ios', 20);
-        }
     }
 
     runAllOverrides();

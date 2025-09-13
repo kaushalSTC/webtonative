@@ -623,9 +623,8 @@
         } catch (err) {}
     }
 
-
-
     async function runAllOverrides() {
+        await setMobilePlatformConfigIfAvailable('android', 20);
         await loadWebToNative();
         await updateNavigationContainerLayout();
         await replaceNewsAndUpdatesLinksWithDivs();
@@ -638,7 +637,6 @@
         await replaceInstagramLinkWithDiv();
         await applyVenueButtonOverridesAndroid();
         await addMarginToTournamentChild();
-        await setMobilePlatformConfigIfAvailable('android', 20);
     }
 
     runAllOverrides();
