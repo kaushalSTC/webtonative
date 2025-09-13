@@ -275,28 +275,28 @@ function App() {
   }, [dispatch]);
 
 
-  if (platform === "android" || platform === "ios") {
-    return (
-      <div style={{
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: platform === "android" ? "#3ddc84" : "#000000",
-        color: "#ffffff",
-        fontFamily: "sans-serif",
-        textAlign: "center"
-      }}>
-        <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
-          {platform === "android" ? "🤖 Android App" : "🍏 iOS App"}
-        </h1>
-        <p style={{ fontSize: "1.2rem" }}>
-          Welcome! You are running on <strong>{platform.toUpperCase()}</strong>.
-        </p>
-      </div>
-    );
-  }
+  // if (platform === "android" || platform === "ios") {
+  //   return (
+  //     <div style={{
+  //       height: "100vh",
+  //       display: "flex",
+  //       flexDirection: "column",
+  //       alignItems: "center",
+  //       justifyContent: "center",
+  //       backgroundColor: platform === "android" ? "#3ddc84" : "#000000",
+  //       color: "#ffffff",
+  //       fontFamily: "sans-serif",
+  //       textAlign: "center"
+  //     }}>
+  //       <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
+  //         {platform === "android" ? "🤖 Android App" : "🍏 iOS App"}
+  //       </h1>
+  //       <p style={{ fontSize: "1.2rem" }}>
+  //         Welcome! You are running on <strong>{platform.toUpperCase()}</strong>.
+  //       </p>
+  //     </div>
+  //   );
+  // }
 
   return <RouterProvider router={router} />;
 }
