@@ -8,7 +8,8 @@ import playerReducer from './reducers/player-slice';
 import tournamentRegisterationReducer from './reducers/tournament-registeration-slice';
 import socialEventRegistrationReducer from './reducers/socialevent-registration-slice';
 import drawerReducer from './reducers/drawerSlice';
-import gameScoreReducer from './reducers/gameScore-slice'; 
+import gameScoreReducer from './reducers/gameScore-slice';
+import wtnReducer from "./reducers/wtn-slice"
 
 const authReducerPersistConfig = { key: 'auth', storage };
 const playerReducerPersistConfig = { key: 'player', storage };
@@ -31,6 +32,7 @@ export const store = configureStore({
     socialEventRegistration: persistedSocialEventRegistrationReducer, 
     drawer: drawerReducer,
     gameScore: gameScoreReducer,
+    wtn: wtnReducer,
   },
 
   // Redux by default expects all state and actions to be "serializable" (convertible to plain JSON). This is enforced by the serializableCheck middleware.

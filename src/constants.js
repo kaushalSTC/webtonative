@@ -1260,6 +1260,9 @@ const COUNTRY_CODES = [
 const SEARCH_PLAYERS = `${BASE_URL}/api/search-players`;
 const ABOUT_US_ENDDPOINT = `${BASE_URL}/api/public/about-us`;
 
+
+const ValidPlatforms = ['android', 'ios'];
+
 export {
   ABOUT_US_ENDDPOINT,
   ANIMATE_CATEGORY,
@@ -1285,4 +1288,5 @@ export {
   COUNTRIES,
   TournamentLiveTabs,
   TournamentFixtureFormats,
+  ValidPlatforms
 };

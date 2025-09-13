@@ -40,6 +40,10 @@ import GameScorePage from './pages/GameScorePage.jsx';
 import ViewGameScores from './pages/ViewGameScores.jsx';
 import GameActivityRecorded from './pages/GameActivityRecorded.jsx';
 import ViewTournamentScore from './pages/ViewTournamentScore.jsx';
+import { useDispatch, useSelector } from 'react-redux';
+import { setMobileConfig } from './store/reducers/wtn-slice.js';
+import { useEffect } from 'react';
+import { ValidPlatforms } from './constants.js';
 
 const router = createBrowserRouter([
   {
@@ -244,6 +248,30 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
+  const dispatch = useDispatch();
+  useEffect(() => {
+  window.handleMobileConfig = (config) => {
+    if (window.handleMobileConfigSet) return true;
+    if (config && ValidPlatforms.includes((config.platform || '').toLowerCase())) {
+      dispatch(
+        setMobileConfig({
+          platform: config.platform.toLowerCase(),
+        })
+      );
+      window.handleMobileConfigSet = true;
+      return true;
+    } else {
+      alert('Invalid config: platform must be "android" or "ios".');
+      return false;
+    }
+  };
+
+  return () => {
+    delete window.handleMobileConfig;
+  };
+}, [dispatch]);
+
+
   return <RouterProvider router={router} />;
 }
 
