@@ -1,1 +1,98 @@
+/*
+  ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Custom Font Family Declarations                                                                                 │
+  └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+*/
+@font-face {
+  font-family: 'Author';
+  src: url('/src/assets/fonts/author.ttf') format('truetype');
+  font-weight: 100 900; /* font weight from 100 to 900 */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Author-Italic';
+  src: url('/src/assets/fonts/author-italic.ttf') format('truetype');
+  font-weight: 100 900; /* font weight from 100 to 900 */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'GeneralSans';
+  src: url('/src/assets/fonts/generalSans.ttf') format('truetype');
+  font-weight: 100 900; /* font weight from 100 to 900 */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'GeneralSans-Italic';
+  src: url('/src/assets/fonts/generalSans-italic.ttf') format('truetype');
+  font-weight: 100 900; /* font weight from 100 to 900 */
+  font-style: normal;
+}
+
+.blog_detail_Page p {
+  font-size: 14px;
+  margin: 20px 0;
+}
+.blog_detail_Page h3{font-size: 18px;margin:40px 0 0;}
+.cardShadow{box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;}
+
+.blog_detail_Page hr{border-top-width: .3px;
+  color: lightgray;}
+
+
+@media screen and (max-width: 768px) {
+  .blog_detail_Page p {
+    margin: 15px 0;
+  }
+  .blog_detail_Page h3{font-size: 16px;margin:30px 0 0;}
+  
+}
+
+/* Calendar css */
+.selected-date {
+  background-color: #ABE400 !important;
+  color: white !important;
+  border-radius: 8px;
+}
+
+
+.react-calendar {
+  width: 100% !important;
+  max-width: 350px; /* Adjust if needed */
+  border-radius: 15px;
+  padding: 5px;
+  box-shadow: none !important;
+  border: none !important;
+
+}
+
+/* .react-calendar .react-calendar__tile--now {
+  background: #d4e157 !important; 
+  color: black !important;
+  border-radius: 8px;
+}
+
+.react-calendar .react-calendar__tile--active {
+  background: #ABE400 !important; 
+  color: white !important;
+  border-radius: 8px;
+} */
+
+.react-calendar .react-calendar__tile--now {
+  border: 2px solid #ABE400 !important;
+  background: transparent !important;
+  color: black !important;
+  border-radius: 8px;
+}
+
+.react-calendar .react-calendar__tile--active {
+  background: #ABE400 !important; 
+  color: white !important;
+  border-radius: 8px;
+}
+button{
+  cursor: pointer;
+}
 

@@ -1,0 +1,15 @@
+.peer:checked ~ .input-radio .radio {
+  border: 1px solid #56B918;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+}
+.peer:checked ~ .input-radio .radio::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  background: #56B918;
+  border-radius: 50%;
+  display: block;
+}

@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+disallow: /login
+disallow: /account
+disallow: /personalDetails
+disallow: /paymentStatus
+disallow: /logout
+disallow: /booking
+disallow: /settings
+disallow: /bookings
+Sitemap: https://www.picklebay.com/sitemap.xml

@@ -1,0 +1,44 @@
+name: Website UAT CI
+
+on:
+  push:
+    branches: ["uat"]
+
+jobs:
+  build-and-deploy:
+    runs-on: website-runner-uat
+
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🛠 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm install
+      - run: |
+          touch .env
+          echo "$${{ secrets.UAT_ENV_FILE }}" > .env
+      - run: npm run build
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.UAT_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.UAT_HOST_IP }} >> ~/.ssh/known_hosts
+
+      - name: 📤 Upload dist via SCP
+        # working-directory: picklebay_website
+        run: |
+          echo "Checking dist folder contents..."
+          ls -la dist
+
+          scp -i ~/.ssh/id_rsa -r dist/* ${{ secrets.UAT_USERNAME }}@${{ secrets.UAT_HOST_IP }}:/home/ec2-user/picklebay_website/dist_new
+
+      - name: Swap dist + Restart PM2
+        run: |
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.UAT_USERNAME }}@${{ secrets.UAT_HOST_IP }} \
+           "cd /home/ec2-user/picklebay_website && pm2 restart picklebay-website-UAT"
