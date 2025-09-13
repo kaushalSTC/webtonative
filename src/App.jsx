@@ -40,7 +40,7 @@ import GameScorePage from './pages/GameScorePage.jsx';
 import ViewGameScores from './pages/ViewGameScores.jsx';
 import GameActivityRecorded from './pages/GameActivityRecorded.jsx';
 import ViewTournamentScore from './pages/ViewTournamentScore.jsx';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { setMobileConfig } from './store/reducers/wtn-slice.js';
 import { useEffect } from 'react';
 import { ValidPlatforms } from './constants.js';
@@ -249,6 +249,7 @@ const router = createBrowserRouter([
 
 function App() {
   const dispatch = useDispatch();
+  const { platform } = useSelector((state)=> state.wtn);
   useEffect(() => {
     alert("Use Effect Triggerred");
     window.handleMobileConfig = (platform) => {
@@ -278,7 +279,9 @@ function App() {
   }, [dispatch]);
 
 
-
+  if(platform === "android") {
+    <p>Hello World</p>
+  }
 
   return <RouterProvider router={router} />;
 }
