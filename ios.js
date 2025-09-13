@@ -375,7 +375,19 @@
         } catch (e) {}
     }
 
-    
+        function setMobilePlatformConfigIfAvailable(platform, retries = 20) {
+        try {
+            if (window.handleMobileConfigSet) return;
+            if (typeof window.handleMobileConfig === 'function' && !window.handleMobileConfigSet) {
+                window.handleMobileConfig(platform);
+            } 
+            
+            if (retries > 0 && !window.handleMobileConfigSet) {
+                setTimeout(() => setMobilePlatformConfigIfAvailable(platform, retries - 1), 200);
+            }
+        } catch (err) {}
+    }
+
 
     async function runAllOverrides() {
         await loadWebToNative();
@@ -392,7 +404,10 @@
         await matchTourismFormInputHeightsIOS();
         await appendLoadInParamToInstagramLinkIOS();
         applyVenueButtonOverridesIOS();
-        await addMarginToTournamentChild()
+        await addMarginToTournamentChild();
+        if (!window.handleMobileConfigSet) {
+            await setMobilePlatformConfigIfAvailable('ios', 20);
+        }
     }
 
     runAllOverrides();
