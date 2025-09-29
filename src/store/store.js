@@ -6,16 +6,16 @@ import authReducer from './reducers/auth-slice';
 import locationReducer from './reducers/location-slice';
 import playerReducer from './reducers/player-slice';
 import tournamentRegisterationReducer from './reducers/tournament-registeration-slice';
-import socialEventRegistrationReducer from './reducers/socialevent-registration-slice';
+import socialEventRegistrationReducer from './reducers/social-event-registration-slice';
 import drawerReducer from './reducers/drawerSlice';
 import gameScoreReducer from './reducers/gameScore-slice';
-import wtnReducer from "./reducers/wtn-slice"
+import wtnReducer from "./reducers/wtn-slice" 
 
 const authReducerPersistConfig = { key: 'auth', storage };
 const playerReducerPersistConfig = { key: 'player', storage };
 const tournamentRegisterationReducerPersistConfig = { key: 'tournamentRegisteration', storage };
 const locationReducerPersistConfig = { key: 'location', storage };
-const socialEventRegistrationPersistConfig = { key: 'socialEventRegistration', storage };
+const socialEventRegistrationPersistConfig = { key: 'socialEventRegistrations', storage };
 
 const persistedaAuthReducer = persistReducer(authReducerPersistConfig, authReducer);
 const persistedPlayerReducer = persistReducer(playerReducerPersistConfig, playerReducer);

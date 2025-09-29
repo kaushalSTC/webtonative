@@ -8,6 +8,50 @@ import { formatDate } from '../../../utils/utlis';
 import ErrorMessage from '../../ErrorMessage/ErrorMessage';
 import SocialEventCheckoutBar from '../SocialEventCheckoutBar/SocialEventCheckoutBar';
 import parse from 'html-react-parser';
+import { useGetPlayerTournamentFormData } from '../../../hooks/PlayerHooks';
+import TournamentDetailsSkillLevel from '../../Tournament/TournamentDetailsSkillLevel/TournamentDetailsSkillLevel';
+import TournamentCategoryName from '../../TournamentBookingFlow/TournamentCategoryName/TournamentCategoryName';
+import TournamentCatgoryPlayerInfo from '../../TournamentBookingFlow/TournamentDraftBooking/TournamentCategoryPlayerInfo/TournamentCatgoryPlayerInfo';
+import PartnerDetails from '../../TournamentBookingFlow/PartnerDetails/PartnerDetails';
+import SocialEventCategoryName from '../SocialEventCategoryName/SocialEventCategoryName';
+import SocialEventBookingName from '../SocialEventBookingName/SocialEventBookingName';
+import SocialEventsPartnerDetails from '../SocialEventsPartnerDetails/SocialEventsPartnerDetails';
+
+// Floating Label Input Component
+const FloatingLabelInput = ({
+  label,
+  type = "text",
+  value = "",
+  onChange,
+  required = false,
+  className = ""
+}) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const hasValue = value && value.toString().trim() !== "";
+  const shouldFloat = isFocused || hasValue;
+
+  return (
+    <div className={`relative ${className}`}>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        required={required}
+        className="w-full border border-d2d2d2 px-4 pt-6 pb-2 rounded-lg transition-all duration-200 bg-white focus:border-56b918 focus:outline-none peer"
+      />
+      <label
+        className={`absolute left-4 transition-all duration-200 pointer-events-none ${shouldFloat
+          ? 'top-1 text-xs text-56b918 font-medium'
+          : 'top-4 text-base text-gray-500'
+          } ${required ? "after:content-['*'] after:text-red-500 after:ml-1" : ''}`}
+      >
+        {label}
+      </label>
+    </div>
+  );
+};
 
 const SocialEventDraftBooking = ({
   isCreateDraftBookingSuccess,
@@ -16,14 +60,19 @@ const SocialEventDraftBooking = ({
 }) => {
   const navigate = useNavigate();
   const socialEventRegistration = useSelector((state) => state.socialEventRegistration);
-
+  const player = useSelector((state) => state.player);
 
   const [isPaymentSummaryTrue, setIsPaymentSummaryTrue] = useState(false);
   const [isBookingValid, setIsBookingValid] = useState(false);
   const [termsAndConditionChecked, setTermsAndConditionChecked] = useState(false);
   const [privacyPolicyChecked, setPrivacyPolicyChecked] = useState(false);
 
-  const { event, booking } = socialEventRegistration;
+  const { event, booking, selectedCategories, selectedSocialEvent } = socialEventRegistration;
+  const [playerFormData, setPlayerFormData] = useState({});
+  const isCollectPlayerData = event?.tournamentData?.collectPlayerData;
+  const { data: playerTournamentFormDataResponse, isLoading: isLoadingPlayerData, error: playerDataError, refetch: refetchPlayerData } = useGetPlayerTournamentFormData(player?.id, event?.tournamentData?._id, { enabled: false });
+
+
 
   /*
     ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -41,10 +90,48 @@ const SocialEventDraftBooking = ({
     │   Booking Validation                                                        │
     └─────────────────────────────────────────────────────────────────────────────┘
   */
+
+  // Prefill form data when API data is loaded successfully
   useEffect(() => {
-    setIsPaymentSummaryTrue(booking.eventId !== '' && booking.playerId !== '');
-    setIsBookingValid(isPaymentSummaryTrue && termsAndConditionChecked && privacyPolicyChecked);
-  }, [isCreateDraftBookingSuccess, booking, termsAndConditionChecked, privacyPolicyChecked, isPaymentSummaryTrue]);
+    if (playerTournamentFormDataResponse?.data?.formData && event?.tournamentData?.playerFormFields) {
+      const prefilledData = {};
+      const formData = playerTournamentFormDataResponse.data.formData;
+
+      // Map API data to form fields by exact label match
+      event?.tournamentData?.playerFormFields.forEach((field) => {
+        if (formData[field.label]) {
+          prefilledData[field.label] = formData[field.label];
+        }
+      });
+
+      setPlayerFormData(prevData => ({
+        ...prevData,
+        ...prefilledData
+      }));
+    }
+  }, [playerTournamentFormDataResponse, event?.tournamentData?.playerFormFields]);
+
+  useEffect(() => {
+    if (isCollectPlayerData) refetchPlayerData?.();
+  }, [isCollectPlayerData, refetchPlayerData]);
+
+  useEffect(() => {
+    const isDoubleCategoriesInBooking = booking.bookingItems.filter((category) => category?.isDoubles);
+
+    const isDoublesCategoriesFilledWithPartners = isDoubleCategoriesInBooking.every((category) => category.partnerDetails);
+
+    setIsPaymentSummaryTrue(booking.eventId !== '' && booking.playerId !== '' && isDoublesCategoriesFilledWithPartners);
+
+    const playerFormValid = !event?.tournamentData?.collectPlayerData ? true : event?.tournamentData?.playerFormFields.every((field) => {
+      const value = playerFormData[field.label];
+      if (field.isRequired && (!value || value.toString().trim() === "")) return false;
+      if (field.type === "Number" && value && isNaN(Number(value))) return false;
+
+      return true;
+    });
+
+    setIsBookingValid(isPaymentSummaryTrue && termsAndConditionChecked && privacyPolicyChecked && playerFormValid);
+  }, [isCreateDraftBookingSuccess, booking, termsAndConditionChecked, privacyPolicyChecked, isPaymentSummaryTrue, playerFormData]);
 
   return (
     <main className="w-full mx-auto bg-f2f2f2">
@@ -92,9 +179,16 @@ const SocialEventDraftBooking = ({
               <div className="flex flex-row gap-2">
                 <img src={CalendarIcon} alt="" className="w-[11px] h-auto" />
                 <p className="text-383838 opacity-70 text-sm font-general font-medium">
-                  {formatDate(event.startDate, true, 'MMM', false)}
+                  {formatDate(event.startDate, true, 'MMM', false)} -{' '}
+                  {formatDate(event.endDate, true, 'MMM', false)}
                 </p>
               </div>
+              {event?.tournamentData?.categories?.length > 0 && (
+                <TournamentDetailsSkillLevel
+                  categories={event?.tournamentData?.categories}
+                  textClassName="font-general text-383838 opacity-70 text-xs font-medium"
+                />
+              )}
             </div>
           </div>
 
@@ -111,43 +205,79 @@ const SocialEventDraftBooking = ({
 
           {/*
             ┌─────────────────────────────────────────────────────────────────────────────┐
-            │           Event Details                                                     │
+            │           Event Category Details                                            │
             └─────────────────────────────────────────────────────────────────────────────┘
           */}
-          <div className="flex flex-col">
-            <div className="flex flex-row items-center justify-between px-[36px] md:px-[88px] py-4 bg-f4f5ff">
-              <div className="flex flex-col gap-1">
-                <h3 className="text-383838 text-base font-general font-medium">{event.eventName}</h3>
-                <p className="text-383838 opacity-70 text-sm font-general font-medium">
-                  {formatDate(event.startDate, true, 'MMM', false)}
-                </p>
-              </div>
-              <div className="flex flex-col items-end gap-1">
-                <p className="text-383838 text-base font-general font-medium">INR {event.registrationFee}/-</p>
-                {event.maxParticipants && (
-                  <p className="text-383838 opacity-70 text-sm font-general font-medium">
-                    Max Participants: {event.maxParticipants}
-                  </p>
-                )}
+          {selectedSocialEvent && (
+            <div className="flex flex-col">
+              <SocialEventBookingName createDraftBookingError={createDraftBookingError} eventName={event.eventName}></SocialEventBookingName>
+              <div className="flex flex-col my-7 gap-5 px-[26px] md:px-[50px] w-full">
+                <TournamentCatgoryPlayerInfo player={player}></TournamentCatgoryPlayerInfo>
               </div>
             </div>
-            <div className="flex flex-col my-7 gap-5 px-[36px] md:px-[88px] w-full">
-              <div className="flex flex-col gap-2">
-                <p className="text-383838 text-sm font-general font-medium">Event Description</p>
-                <p className="text-383838 opacity-70 text-sm font-general font-normal">
-                {parse(event.description) || 'No description available'}
-                </p>
+          )}
+
+          {selectedCategories.map((category, index) => {
+            return (
+              <div key={index} className="flex flex-col">
+                <SocialEventCategoryName
+                  category={category}
+                  createDraftBookingError={createDraftBookingError}
+                ></SocialEventCategoryName>
+                <div className="flex flex-col my-7 gap-5 px-[26px] md:px-[50px] w-full">
+                  <TournamentCatgoryPlayerInfo player={player}></TournamentCatgoryPlayerInfo>
+                  {category.isDoubles && <SocialEventsPartnerDetails category={category}></SocialEventsPartnerDetails>}
+                  {/* {category.isDoubles && <PartnerDetails category={category}></PartnerDetails>} */}
+                </div>
               </div>
-              {event.eventlocation && (
-                <div className="flex flex-col gap-2">
-                  <p className="text-383838 text-sm font-general font-medium">Location</p>
-                  <p className="text-383838 opacity-70 text-sm font-general font-normal">
-                    {event.eventlocation.address.addressLine1}, {event.eventlocation.address.city}
-                  </p>
+            );
+          })}
+
+          {/*
+            ┌─────────────────────────────────────────────────────────────────────────────┐
+            │           Player Additional Details Form                                    │
+            └─────────────────────────────────────────────────────────────────────────────┘
+          */}
+
+          {event?.tournamentData?.collectPlayerData && event?.tournamentData?.playerFormFields?.length > 0 && (
+            <div className="block pt-10 mb-1">
+              <p className="text-383838 opacity-70 text-base px-[36px] md:px-[88px] font-general font-medium">
+                Add Additional Information
+              </p>
+
+              {isLoadingPlayerData && (
+                <div className="px-[26px] md:px-[88px] mt-6">
+                  <p className="text-gray-500 text-sm">Loading player data...</p>
                 </div>
               )}
+
+              <div
+                className={`grid gap-5 px-[26px] md:px-[88px] w-full mt-6`}
+                style={{
+                  gridTemplateColumns:
+                    event?.tournamentData?.playerFormFields?.length > 3
+                      ? "repeat(auto-fit, minmax(280px, 1fr))"
+                      : "1fr",
+                }}
+              >
+                {event?.tournamentData?.playerFormFields?.map((field, idx) => (
+                  <FloatingLabelInput
+                    key={idx}
+                    label={field.label}
+                    type={field.type === "Number" ? "number" : "text"}
+                    value={playerFormData[field.label] || ""}
+                    onChange={(e) =>
+                      setPlayerFormData((prev) => ({
+                        ...prev,
+                        [field.label]: e.target.value,
+                      }))
+                    }
+                    required={field.isRequired}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/*
             ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -159,31 +289,33 @@ const SocialEventDraftBooking = ({
               <div className="flex flex-col gap-5 pt-12 px-[36px] md:px-[88px] pb-20">
                 <p className="text-383838 opacity-70 text-base font-general font-medium">Payment Summary</p>
 
-                <div className="w-full flex flex-row justify-between">
-                  <p className="text-383838 text-sm font-general font-medium opacity-80">Registration Fee</p>
-                  <p className="text-383838 text-base font-general font-medium">INR {event.registrationFee}/-</p>
-                </div>
+                {booking.totalAmount > 0 && (
+                  <div className="w-full flex flex-row justify-between">
+                    <p className="text-383838 text-sm font-general font-medium opacity-80">Registration Fees</p>
+                    <p className="text-383838 text-base font-general font-medium">INR. {booking.totalAmount}</p>
+                  </div>
+                )}
 
                 {booking.gstAmount > 0 && (
                   <div className="w-full flex flex-row justify-between">
                     <p className="text-383838 text-sm font-general font-medium opacity-80">GST</p>
-                    <p className="text-383838 text-base font-general font-medium">INR {booking.gstAmount}/-</p>
+                    <p className="text-383838 text-base font-general font-medium">INR. {booking.gstAmount}</p>
                   </div>
                 )}
 
                 {booking.discountAmount > 0 && (
                   <div className="w-full flex flex-row justify-between">
-                    <p className="text-383838 text-sm font-general font-medium opacity-80">Discount</p>
-                    <p className="text-383838 text-base font-general font-medium text-red-500">- INR {booking.discountAmount}/-</p>
+                    <p className="text-383838 text-sm font-general font-medium opacity-80">Registration Fees</p>
+                    <p className="text-383838 text-base font-general font-medium">INR. {booking.discountAmount}</p>
                   </div>
                 )}
 
-                <div className="w-full flex flex-row justify-between py-5 border-1 border-t-d2d2d2 border-b-d2d2d2 border-l-0 border-r-0">
-                  <p className="text-[#1C0E0EB3] text-base font-general font-medium opacity-80">Total Amount</p>
-                  <p className="text-[#1C0E0EB3] text-base font-general font-semibold">
-                    INR {(booking.finalAmount || event.registrationFee)}/-
-                  </p>
-                </div>
+                {booking.finalAmount > 0 && (
+                  <div className="w-full flex flex-row justify-between py-5 border-1 border-t-d2d2d2 border-b-d2d2d2 border-l-0 border-r-0">
+                    <p className="text-[#1C0E0EB3] text-base font-general font-medium opacity-80">Subtotal</p>
+                    <p className="text-[#1C0E0EB3] text-base font-general font-semibold">INR. {booking.finalAmount}</p>
+                  </div>
+                )}
               </div>
 
               {/*
@@ -260,7 +392,7 @@ const SocialEventDraftBooking = ({
             │           Checkout Bar                                                      │
             └─────────────────────────────────────────────────────────────────────────────┘
           */}
-          <SocialEventCheckoutBar isBookingValid={isBookingValid} createDraftBookingError={createDraftBookingError} />
+          <SocialEventCheckoutBar isBookingValid={isBookingValid} createDraftBookingError={createDraftBookingError} playerFormData={playerFormData} />
         </div>
       </div>
     </main>

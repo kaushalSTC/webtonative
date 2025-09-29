@@ -89,16 +89,12 @@ export const eventById = async ({ eventId }) => {
   │ Create Draft Booking for Social Event                                    │
   └─────────────────────────────────────────────────────────────────────────┘
 */
-export const createEventDraftBooking = async ({ playerId, eventId }) => {
-  if (!playerId || !eventId) {
+export const createEventDraftBooking = async ({ playerId, payload }) => {
+  if (!playerId || !payload) {
     throw new Error('Player ID and Event ID are required');
   }
 
   const ENDPOINT = `${PLAYER_ENDPOINT}/${playerId}/event-bookings`;
-
-  let data = {
-    eventId: `${eventId}`,
-  };
 
   let config = {
     method: 'POST',
@@ -108,17 +104,50 @@ export const createEventDraftBooking = async ({ playerId, eventId }) => {
     headers: {
       'Content-Type': 'application/json'
     },
-    data: JSON.stringify(data)
+    data: payload,
   };
 
   try {
     const response = await axios.request(config);
     return response.data.data;
   } catch (error) {
-    console.error('🚀 || file: socialEvent.js || createEventDraftBooking || error:', error);
     throw error.response?.data || error;
   }
 };
+
+
+/* 
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ Delete social event boooking                                            │
+  └─────────────────────────────────────────────────────────────────────────┘
+ */
+
+export const deleteSocialEventBooking = async ({ playerId, bookingId, payload }) => {
+  if (!playerId || !bookingId || !payload) {
+    throw new Error('Player ID, Booking ID and payload are required');
+  }
+
+  const ENDPOINT = `${PLAYER_ENDPOINT}/${playerId}/event-bookings/${bookingId}/delete`;
+
+  const config = {
+    method: 'POST',
+    maxBodyLength: Infinity,
+    url: ENDPOINT,
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    data: payload,
+  };
+
+  try {
+    const response = await axios.request(config);
+    return response.data.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 
 /*
   ┌─────────────────────────────────────────────────────────────────────────┐
@@ -133,7 +162,8 @@ export const createEventDraftCheckout = async ({
   discountAmount = 0,
   amountAfterDiscount,
   gstAmount,
-  finalAmount 
+  finalAmount ,
+  bookingItems
 }) => {
   if (!playerId) {
     throw new Error('Player Not Logged In');
@@ -155,7 +185,8 @@ export const createEventDraftCheckout = async ({
     discountAmount,
     amountAfterDiscount,
     gstAmount,
-    finalAmount
+    finalAmount,
+    bookingItems
   };
 
   let config = {
@@ -173,7 +204,6 @@ export const createEventDraftCheckout = async ({
     const response = await axios.request(config);
     return response.data.data;
   } catch (error) {
-    console.error('🚀 || file: socialEvent.js || createEventDraftCheckout || error:', error);
     throw error.response?.data || error;
   }
 };
@@ -213,7 +243,6 @@ export const createOrderForPayment = async ({ playerId, bookingId, amount }) => 
     const response = await axios.request(config);
     return response.data.data;
   } catch (error) {
-    console.error('🚀 || file: socialEvent.js || createOrderForPayment || error:', error);
     throw error.response?.data || error;
   }
 };
@@ -245,7 +274,6 @@ export const verifyPayment = async ({ playerId, bookingId, paymentDetails }) => 
     const response = await axios.request(config);
     return response.data.data;
   } catch (error) {
-    console.error('🚀 || file: socialEvent.js || verifyPayment || error:', error);
     throw error.response?.data || error;
   }
 };
@@ -277,5 +305,118 @@ export const createEventPost = async ({ playerID, eventHandle, eventLinkObj }) =
     return response.data;
   } catch (error) {
     throw error;
+  }
+};
+
+
+export const socialEventSendPartnerOTP = async ({ playerId, phone, bookingId, partnerId, tournamentId, countryCode }) => {
+  if (!playerId) {
+    throw new Error('Player Not Logged In');
+  }
+
+  if (!bookingId) {
+    throw new Error('Booking Not Created');
+  }
+
+  let data = {}
+  if (phone) {
+    data.phone = phone;
+  }
+  if (partnerId) {
+    data.playerId = partnerId; // Partner ID
+  }
+  if (tournamentId) {
+    data.tournamentId = tournamentId;
+  }
+  if (countryCode) {
+    data.countryCode = countryCode;
+  }
+  const ENDPOINT = `${PLAYER_ENDPOINT}/${playerId}/bookings/${bookingId}/send-partner-otp`;
+
+  let config = {
+    method: 'POST',
+    maxBodyLength: Infinity,
+    url: ENDPOINT,
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: JSON.stringify(data),
+  };
+
+  try {
+    const response = await axios.request(config);
+    return response.data.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const SocialEventVerifyAndUpdatePartner = async ({ tournamentId, categoryId, playerId, partnerId, name, gender, dob, phone, otp, bookingId, countryCode }) => {
+  if (!tournamentId) {
+    throw new Error('Tournament Not Found');
+  }
+  if (!categoryId) {
+    throw new Error('Category Not Found');
+  }
+  if (!bookingId) {
+    throw new Error('Booking Not Created');
+  }
+
+  const ENDPOINT = `${PLAYER_ENDPOINT}/${playerId}/bookings/${bookingId}/verify-update-partner`;
+  let data = {partnerDetails: {}}
+
+  if (tournamentId) {
+    data.tournamentId = tournamentId;
+  }
+
+  if (categoryId) {
+    data.categoryId = categoryId;
+  }
+
+  if (partnerId) {
+    data.partnerDetails.playerId = partnerId;
+  }
+
+  if (name) {
+    data.partnerDetails.name = name;
+  }
+
+  if (gender) {
+    data.partnerDetails.gender = gender;
+  }
+
+  if (dob) {
+    data.partnerDetails.dob = dob;
+  }
+
+  if (phone) {
+    data.partnerDetails.phone = phone;
+  }
+
+  if (otp) {
+    data.partnerDetails.otp = otp;
+  }
+
+  if (countryCode) {
+    data.partnerDetails.countryCode = countryCode;
+  }
+
+  let config = {
+    method: 'POST',
+    maxBodyLength: Infinity,
+    url: ENDPOINT,
+    withCredentials: true,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: JSON.stringify(data),
+  };
+
+  try {
+    const response = await axios.request(config);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
   }
 };

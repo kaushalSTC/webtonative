@@ -29,7 +29,7 @@ const SocialEventPreRequisites = ({ event }) => {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -24 }}
       transition={{ duration: 0.2, ease: easeOut }}
-      className="w-full bg-white px-9 md:px-20 py-10 pb-5 gap-[18px] flex flex-col mt-[10px]"
+      className="w-full bg-white px-9 md:px-20 py-10 pb-5 gap-[18px] flex flex-col my-[10px]"
     >
       <Disclosure as="div" className="w-full" defaultOpen={true}>
         {({ open }) => (

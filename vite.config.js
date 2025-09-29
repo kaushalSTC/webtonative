@@ -10,6 +10,6 @@ export default defineConfig({
     port:5174
   },
   preview: {
-    allowedHosts: ["picklebay.com", "www.picklebay.com"], // Explicitly allow the domain
+    allowedHosts: ["dev.picklebay.com", "www.dev.picklebay.com"], // Explicitly allow the domain
   },
 });

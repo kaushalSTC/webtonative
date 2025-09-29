@@ -1,56 +1,59 @@
-import { createBrowserRouter, RouterProvider, ScrollRestoration, redirect } from 'react-router';
+import {
+  createBrowserRouter,
+  RouterProvider,
+  ScrollRestoration,
+  redirect,
+} from "react-router";
 
-
-import './App.css';
-import Layout from './components/Layout';
-import LayoutWithoutFooter from './components/LayoutWithoutFooter';
-import TournamentPaymentStatus from './components/TournamentBookingFlow/TournamentPaymentStatus/TournamentPaymentStatus';
-import BlogDeatils from './pages/BlogDeatils';
-import BlogListing from './pages/BlogListing';
-import ComingSoon from './pages/ComingSoon';
-import Faq from './pages/Faq';
-import Homepage from './pages/Home';
-import Login from './pages/Login';
-import PersonalDetails from './pages/PersonalDetails';
-import Profile from './pages/Profile';
+import "./App.css";
+import Layout from "./components/Layout";
+import LayoutWithoutFooter from "./components/LayoutWithoutFooter";
+import TournamentPaymentStatus from "./components/TournamentBookingFlow/TournamentPaymentStatus/TournamentPaymentStatus";
+import BlogDeatils from "./pages/BlogDeatils";
+import BlogListing from "./pages/BlogListing";
+import ComingSoon from "./pages/ComingSoon";
+import Faq from "./pages/Faq";
+import Homepage from "./pages/Home";
+import Login from "./pages/Login";
+import PersonalDetails from "./pages/PersonalDetails";
+import Profile from "./pages/Profile";
 import StaticPage from "./pages/StaticPage";
-import TournamentBookingPage from './pages/TournamentBookingPage';
-import TournamentDetails from './pages/TournamentDetails';
-import TournamentListing from './pages/TournamentListing';
-import UserAccount from './pages/UserAccount';
-import VenueDetails from './pages/VenueDetails';
-import VenueListing from './pages/VenueListing';
-import TournamentLivePage from './pages/TournamentLive';
-import AccountLayout from './components/AccountLayout/AccountLayout.jsx';
-import GamesListing from './pages/GamesListing.jsx';
-import CreateGame from './pages/CreateGame.jsx';
-import GameDetails from './pages/GameDetails.jsx';
-import EditGame from './pages/EditGame.jsx';
-import ComingSoonLayout from './components/ComingSoonLayout';
-import ContactUs from './pages/ContactUs.jsx';
-import Community from './pages/Community.jsx';
-import AboutUs from './pages/AboutUs.jsx';
-import Tourism from './pages/Tourism.jsx';
-import usePageTracking from './hooks/usePageTracking';
-import SocialEventDetails from './pages/SocialEventDetails.jsx';
-import SocialEventBookingPage from './pages/SocialEventBookingPage.jsx';
-import SocialEventPaymentStatus from './components/SocialEvents/SocialEventPaymentStatus/SocialEventPaymentStatus.jsx';
-import PlayingActivity from './pages/PlayingActivity.jsx';
-import GameScorePage from './pages/GameScorePage.jsx';
-import ViewGameScores from './pages/ViewGameScores.jsx';
-import GameActivityRecorded from './pages/GameActivityRecorded.jsx';
-import ViewTournamentScore from './pages/ViewTournamentScore.jsx';
-import { useDispatch, useSelector } from 'react-redux';
-import { setMobileConfig } from './store/reducers/wtn-slice.js';
-import { useEffect } from 'react';
-import { ValidPlatforms } from './constants.js';
-
+import TournamentBookingPage from "./pages/TournamentBookingPage";
+import TournamentDetails from "./pages/TournamentDetails";
+import TournamentListing from "./pages/TournamentListing";
+import UserAccount from "./pages/UserAccount";
+import VenueDetails from "./pages/VenueDetails";
+import VenueListing from "./pages/VenueListing";
+import TournamentLivePage from "./pages/TournamentLive";
+import AccountLayout from "./components/AccountLayout/AccountLayout.jsx";
+import GamesListing from "./pages/GamesListing.jsx";
+import CreateGame from "./pages/CreateGame.jsx";
+import GameDetails from "./pages/GameDetails.jsx";
+import EditGame from "./pages/EditGame.jsx";
+import ComingSoonLayout from "./components/ComingSoonLayout";
+import ContactUs from "./pages/ContactUs.jsx";
+import Community from "./pages/Community.jsx";
+import AboutUs from "./pages/AboutUs.jsx";
+import Tourism from "./pages/Tourism.jsx";
+import usePageTracking from "./hooks/usePageTracking";
+import SocialEventDetails from "./pages/SocialEventDetails.jsx";
+import SocialEventBookingPage from "./pages/SocialEventBookingPage.jsx";
+import SocialEventPaymentStatus from "./components/SocialEvents/SocialEventPaymentStatus/SocialEventPaymentStatus.jsx";
+import PlayingActivity from "./pages/PlayingActivity.jsx";
+import GameScorePage from "./pages/GameScorePage.jsx";
+import ViewGameScores from "./pages/ViewGameScores.jsx";
+import GameActivityRecorded from "./pages/GameActivityRecorded.jsx";
+import ViewTournamentScore from "./pages/ViewTournamentScore.jsx";
+import { ValidPlatforms } from "./constants.js";
+import { setMobileConfig } from "./store/reducers/wtn-slice.js";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import SocialEventLivePage from "./pages/SocialEventLive.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
     element: <ComingSoonLayout />, // Render ComingSoon on root path
-    children: [
-    ]
+    children: [],
   },
   {
     path: "",
@@ -62,52 +65,52 @@ const router = createBrowserRouter([
     ),
     children: [
       {
-        path: '/community',
-        element: <Community />
+        path: "/community",
+        element: <Community />,
       },
       {
-        path: 'pages/:handle',
+        path: "pages/:handle",
         element: <StaticPage />,
       },
       {
-        path: 'pages/faq',
-        element: <Faq/>,
+        path: "pages/faq",
+        element: <Faq />,
       },
       {
-        path: '/playing-activity/:id',
-        element: <PlayingActivity/>,
+        path: "/playing-activity/:id",
+        element: <PlayingActivity />,
       },
       {
-        path: 'pages/contactUs',
-        element: <ContactUs/>,
+        path: "pages/contactUs",
+        element: <ContactUs />,
       },
       {
-        path: 'pages/picklebay-retreats',
+        path: "pages/picklebay-for-corporates",
         element: <Tourism />,
       },
       {
-        path: 'pages/about-us',
+        path: "pages/about-us",
         element: <AboutUs />,
       },
       {
         index: true,
-        element: <Homepage />
+        element: <Homepage />,
       },
       {
-        path: 'venues/:handle',
+        path: "venues/:handle",
         element: <VenueDetails />,
       },
       {
-        path: 'venues',
+        path: "venues",
         element: <VenueListing />,
       },
       {
-        path: 'tournaments/:handle',
+        path: "tournaments/:handle",
         element: <TournamentDetails />,
       },
       {
-        path: 'tournaments/:handle/scores/fixture/:fixtureId',
-        element: <ViewTournamentScore/>,
+        path: "tournaments/:handle/scores/fixture/:fixtureId",
+        element: <ViewTournamentScore />,
       },
       {
         path: "tournaments",
@@ -118,7 +121,7 @@ const router = createBrowserRouter([
         element: <TournamentPaymentStatus />,
       },
       {
-        path: 'social-events/:handle',
+        path: "social-events/:handle",
         element: <SocialEventDetails />,
       },
       {
@@ -134,55 +137,59 @@ const router = createBrowserRouter([
         element: <TournamentLivePage />,
       },
       {
+        path: "social-events/:handle/live",
+        element: <SocialEventLivePage />,
+      },
+      {
         path: "logout",
         element: <UserAccount />,
       },
       {
-        path: 'account',
-        element: <Profile/>,
+        path: "account",
+        element: <Profile />,
       },
       {
-        path: 'account/bookings',
-        element: <UserAccount/>,
+        path: "account/bookings",
+        element: <UserAccount />,
       },
       {
-        path: 'account/settings',
-        element: <UserAccount/>,
+        path: "account/settings",
+        element: <UserAccount />,
       },
       {
-        path: 'account/personal-details',
-        element: <PersonalDetails/>,
+        path: "account/personal-details",
+        element: <PersonalDetails />,
       },
       {
-        path: 'games',
+        path: "games",
         element: <GamesListing />,
       },
       {
-        path: 'create-game',
+        path: "create-game",
         element: <CreateGame />,
       },
       {
-        path: 'edit-game/:handle',
+        path: "edit-game/:handle",
         element: <EditGame />,
       },
       {
-        path: '/games/:handle',
+        path: "/games/:handle",
         element: <GameDetails />,
       },
       {
-        path: '/games/:handle/score',
+        path: "/games/:handle/score",
         element: <GameScorePage />,
       },
       {
-        path: '/games/:handle/score/conformation',
+        path: "/games/:handle/score/conformation",
         element: <GameActivityRecorded />,
       },
       {
-        path: '/games/:handle/score-details',
-        element: <ViewGameScores />
+        path: "/games/:handle/score-details",
+        element: <ViewGameScores />,
       },
       {
-        path: '*', // Catch-all for undefined routes
+        path: "*", // Catch-all for undefined routes
         element: <ComingSoon />, // For Future <404Page />
       },
     ],
@@ -209,7 +216,7 @@ const router = createBrowserRouter([
         element: <TournamentBookingPage />,
       },
       {
-        path: '*', // Catch-all for undefined routes
+        path: "*", // Catch-all for undefined routes
         element: <ComingSoon />, // For Future <404Page />
       },
     ],
@@ -236,20 +243,19 @@ const router = createBrowserRouter([
         element: <SocialEventPaymentStatus />,
       },
       {
-        path: '*', // Catch-all for undefined routes
+        path: "*", // Catch-all for undefined routes
         element: <ComingSoon />, // For Future <404Page />
       },
     ],
   },
   {
-    path: '*', // Catch-all for undefined routes
+    path: "*", // Catch-all for undefined routes
     element: <ComingSoon />, // For Future <404Page />
   },
 ]);
 
 function App() {
   const dispatch = useDispatch();
-  const { platform } = useSelector((state)=> state.wtn);
   useEffect(() => {
     window.handleMobileConfig = (platform) => {
       try {
@@ -257,7 +263,11 @@ function App() {
           return true;
         }
 
-        if (platform && typeof platform === "string" && ValidPlatforms.includes(platform.toLowerCase())) {
+        if (
+          platform &&
+          typeof platform === "string" &&
+          ValidPlatforms.includes(platform.toLowerCase())
+        ) {
           dispatch(setMobileConfig({ platform: platform.toLowerCase() }));
           window.handleMobileConfigSet = true;
           return true;
@@ -273,30 +283,6 @@ function App() {
       delete window.handleMobileConfig;
     };
   }, [dispatch]);
-
-
-  // if (platform === "android" || platform === "ios") {
-  //   return (
-  //     <div style={{
-  //       height: "100vh",
-  //       display: "flex",
-  //       flexDirection: "column",
-  //       alignItems: "center",
-  //       justifyContent: "center",
-  //       backgroundColor: platform === "android" ? "#3ddc84" : "#000000",
-  //       color: "#ffffff",
-  //       fontFamily: "sans-serif",
-  //       textAlign: "center"
-  //     }}>
-  //       <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
-  //         {platform === "android" ? "🤖 Android App" : "🍏 iOS App"}
-  //       </h1>
-  //       <p style={{ fontSize: "1.2rem" }}>
-  //         Welcome! You are running on <strong>{platform.toUpperCase()}</strong>.
-  //       </p>
-  //     </div>
-  //   );
-  // }
 
   return <RouterProvider router={router} />;
 }

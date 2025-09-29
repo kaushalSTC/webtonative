@@ -67,8 +67,8 @@ const defaultDesktopSecondMenu = [
   },
   {
     hidden: false,
-    link: 'pages/picklebay-retreats',
-    name: 'Picklebay Retreats',
+    link: 'pages/picklebay-for-corporates',
+    name: 'Picklebay for Corporates',
     icon: NewsIcon,
     featureEnabled: true,
     allowedOnLogin: true,

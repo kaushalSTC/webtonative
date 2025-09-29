@@ -37,6 +37,7 @@ const SocialEventBookingPage = () => {
     │   Mutations and Queries                                                     │
     └─────────────────────────────────────────────────────────────────────────────┘
   */
+
   const {
     mutate: createDraftBooking,
     isSuccess: isCreateDraftBookingSuccess,
@@ -45,6 +46,7 @@ const SocialEventBookingPage = () => {
     error: createDraftBookingError
   } = useCreateEventDraftBooking();
 
+
   useEffect(() => {
     if (
       auth.isLoggedIn &&                                                                           // Player is Logged In
@@ -52,12 +54,27 @@ const SocialEventBookingPage = () => {
       event && event._id &&                                                                        // Event Is Selected
       !socialEventRegistration.booking.eventId                                                     // Booking Doesn't Already Exist
     ) {
+      const payload = {
+        communityAdded: socialEventRegistration.selectedSocialEvent || false,
+        eventId: socialEventRegistration.eventId,
+        bookingItems: socialEventRegistration.selectedCategories.map((cat) => {
+          if (cat.format === "LEAGUE" && cat.type === "MIL") {
+            return {
+              categoryId: cat._id,
+              registrationCategory: cat.selectedGender,
+            };
+          }
+          return { categoryId: cat._id };
+        })
+      };
+
       createDraftBooking({
         playerId: player.id,
-        eventId: event._id
+        payload,
       });
     }
   }, [player]);
+
 
   /*
     ┌─────────────────────────────────────────────────────────────────────────────┐

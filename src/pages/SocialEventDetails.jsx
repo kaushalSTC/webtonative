@@ -14,23 +14,15 @@ import SocialEventSponsors from '../components/SocialEvents/SocialEventSponsors/
 import SocialEventPreviousEvents from '../components/SocialEvents/SocialEventPreviousEvents/SocialEventPreviousEvents';
 import SocialEventOrganizer from '../components/SocialEvents/SocialEventOrganizer/SocialEventOrganizer';
 import SocialEventRegistration from '../components/SocialEvents/SocialEventRegistration/SocialEventRegistration';
-import { setEvent } from '../store/reducers/socialevent-registration-slice';
 import TrendingCommunityEvents from '../components/SocialEvents/TendingCommunityEvents/TendingCommunityEvents';
 import { DownArrow } from '../assets';
+import SocialEventCategories from '../components/SocialEvents/SocialEventCategories/SocialEventCategories';
 
 const SocialEventDetails = () => {
   const { handle } = useParams();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { data: { event } = {}, isLoading, isError, error } = useEventByHandleQuery(handle);
   const { data: trendingSection = {}, isLoading: trendingLoading } = useTrendingCommunityEvents();
-
-  // Move the dispatch to useEffect to avoid state updates during render
-  useEffect(() => {
-    if (event) {
-      dispatch(setEvent(event));
-    }
-  }, [event, dispatch]);
 
   if (!handle) return <ErrorState message="No event handle provided"></ErrorState>;
 
@@ -58,6 +50,7 @@ const SocialEventDetails = () => {
           <SocialEventsWhatToExpect event={event} />
           <SocialEventGallery event={event} />
           <SocialEventPreRequisites event={event} />
+          <SocialEventCategories event={event} />
           <SocialEventSponsors event={event} />
           <SocialEventOrganizer event={event} />
           <SocialEventPreviousEvents event={event} />

@@ -1260,8 +1260,13 @@ const COUNTRY_CODES = [
 const SEARCH_PLAYERS = `${BASE_URL}/api/search-players`;
 const ABOUT_US_ENDDPOINT = `${BASE_URL}/api/public/about-us`;
 
+/* 
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ Devices                                                                 │
+  └─────────────────────────────────────────────────────────────────────────┘
+ */
 
-const ValidPlatforms = ['android', 'ios'];
+  const ValidPlatforms = ['android', 'ios'];
 
 export {
   ABOUT_US_ENDDPOINT,

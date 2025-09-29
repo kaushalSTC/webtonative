@@ -1,14 +1,26 @@
-import PropTypes from 'prop-types';
-import { useState } from 'react';
-import { RWebShare } from 'react-web-share';
-import parse from 'html-react-parser';
-import { CalendarIcon, Location, MapIcon, ShareIcon } from '../../../assets';
-import { convertSingleTimeTo12Hour, formatAddress, getDateString } from '../../../utils/utlis';
-import CommunityButton from '../../CommunityButton/CommunityButton';
-import { useCreateEventPost } from '../../../hooks/SocialEventHooks';
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router';
-import { createToast, createErrorToast } from '../../../utils/utlis';
+import PropTypes from "prop-types";
+import { useState } from "react";
+import { RWebShare } from "react-web-share";
+import parse from "html-react-parser";
+import { CalendarIcon, Location, MapIcon, ShareIcon } from "../../../assets";
+import {
+  convertSingleTimeTo12Hour,
+  formatAddress,
+  getDateString,
+} from "../../../utils/utlis";
+import CommunityButton from "../../CommunityButton/CommunityButton";
+import { useCreateEventPost } from "../../../hooks/SocialEventHooks";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router";
+import { createToast, createErrorToast } from "../../../utils/utlis";
+import { formatDate } from "../../../utils/utlis";
+
+const parseDateString = (dateString) => {
+  if (!dateString) return null;
+  const parts = dateString.split("/");
+  if (parts.length !== 3) return null;
+  return new Date(parts[2], parts[1] - 1, parts[0]);
+};
 
 const SocialEventInfo = ({ event }) => {
   const [isSharing, setIsSharing] = useState(false);
@@ -19,94 +31,156 @@ const SocialEventInfo = ({ event }) => {
   const BASE_URL = `${import.meta.env.VITE_DEV_URL}`;
   const joinEventLink = `${BASE_URL}events/${event.handle}`;
 
-  const { mutate: createEventPost, isLoading: isCreateEventPostLoading } = useCreateEventPost();
+  const { mutate: createEventPost, isLoading: isCreateEventPostLoading } =
+    useCreateEventPost();
+  const isBookingAllowed = (() => {
+    const { bookingStartDate, bookingEndDate } = event;
+    if (!bookingStartDate || !bookingEndDate) {
+      return false;
+    }
+
+    const startDate = parseDateString(bookingStartDate);
+    const endDate = parseDateString(bookingEndDate);
+
+    if (!startDate || !endDate) {
+      console.error(
+        "Error parsing tournament booking dates:",
+        bookingStartDate,
+        bookingEndDate
+      );
+      return false;
+    }
+
+    const currentDate = new Date();
+
+    // Set start date to beginning of the day
+    startDate.setHours(0, 0, 0, 0);
+
+    // Set end date to end of the day (11:59:59 PM)
+    endDate.setHours(23, 59, 59, 999);
+
+    // Keep current date as is (with current time)
+    return currentDate >= startDate && currentDate <= endDate;
+  })();
 
   // Safely access dates with null checkse
-  const bookingStartDate = event?.bookingStartDate ? getDateString(event.bookingStartDate) : null;
-  const bookingEndDate = event?.bookingEndDate ? getDateString(event.bookingEndDate) : null;
-  const startTime = event?.startTime ? convertSingleTimeTo12Hour(event.startTime) : '';
-  const endTime = event?.endTime ? convertSingleTimeTo12Hour(event.endTime) : '';
-  const startDate = event?.startDate ? getDateString(event.startDate) : '';
+  const bookingStartDate = event?.bookingStartDate
+    ? getDateString(event.bookingStartDate)
+    : null;
+  const bookingEndDate = event?.bookingEndDate
+    ? getDateString(event.bookingEndDate)
+    : null;
+  const startTime = event?.startTime
+    ? convertSingleTimeTo12Hour(event.startTime)
+    : "";
+  const endTime = event?.endTime
+    ? convertSingleTimeTo12Hour(event.endTime)
+    : "";
+  const startDate = event?.startDate ? getDateString(event.startDate) : "";
 
   const handleCreateEventPost = () => {
-    createEventPost({ 
-      playerID, 
-      eventHandle: event.handle, 
-      eventLinkObj: { eventJoinLink: joinEventLink } 
-    }, {
-      onSuccess: (data) => {
-        createToast('Event post created successfully');
-        navigate('/community');
+    createEventPost(
+      {
+        playerID,
+        eventHandle: event.handle,
+        eventLinkObj: { eventJoinLink: joinEventLink },
       },
-      onError: (error) => {
-        console.log(error, 'error');
-        createErrorToast(error?.response?.data?.message || 'Failed to create event post');
+      {
+        onSuccess: (data) => {
+          createToast("Event post created successfully");
+          navigate("/community");
+        },
+        onError: (error) => {
+          console.log(error, "error");
+          createErrorToast(
+            error?.response?.data?.message || "Failed to create event post"
+          );
+        },
       }
-    });
+    );
   };
 
   const handleOpenMap = () => {
     const address = event?.eventLocation?.address;
     if (!address) {
-      console.warn('No address available for mapping');
+      console.warn("No address available for mapping");
       return;
     }
 
     const fullAddress = formatAddress(address);
     if (!fullAddress.trim()) {
-      console.warn('Empty address after formatting');
+      console.warn("Empty address after formatting");
       return;
     }
 
-    const googleMapUrl = `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}`;
+    const googleMapUrl = `https://www.google.com/maps?q=${encodeURIComponent(
+      fullAddress
+    )}`;
     window.open(googleMapUrl, "_blank");
   };
+  const handleLiveClick = () => {
+    navigate(`/social-events/${event.handle}/live`);
+  };
+  const [day, month, year] = event.bookingStartDate.split("/").map(Number);
+  const bookingDate = new Date(year, month - 1, day); // month is 0-indexed
 
   const getRegistrationStatus = (bookingStartDate, bookingEndDate) => {
-    if (!bookingStartDate || !bookingEndDate) return '';
-  
+    if (!bookingStartDate || !bookingEndDate) return "";
+
     const today = new Date();
-  
-    const [startDay, startMonth] = bookingStartDate.split('/').map(Number);
-    const [endDay, endMonth] = bookingEndDate.split('/').map(Number);
-  
+
+    const [startDay, startMonth] = bookingStartDate.split("/").map(Number);
+    const [endDay, endMonth] = bookingEndDate.split("/").map(Number);
+
     const startDate = new Date(2025, startMonth - 1, startDay);
     const endDate = new Date(2025, endMonth - 1, endDay);
-  
+    const [day, month, year] = event.bookingStartDate.split("/").map(Number);
+    const bookingDate = new Date(year, month - 1, day); // month is 0-indexed
     if (today < startDate) {
       return (
-        <div className='bg-f4f5ff px-9 md:px-20 py-3 rounded-md'>
-          <p className='font-general font-medium text-xs md:text-sm text-383838'>
-            Registrations open on 
+        <div className="bg-f4f5ff px-9 md:px-20 py-3 rounded-md">
+          <p className="font-general font-medium text-xs md:text-sm text-383838">
+            Registrations open on
           </p>
-          <span className='text-black font-general font-medium text-xs md:text-sm'>{getDateString(bookingStartDate)}</span>
+          <span className="text-black font-general font-medium text-xs md:text-sm">
+            {getDateString(bookingStartDate)}
+          </span>
         </div>
       );
     } else if (today > endDate) {
       return (
-        <div className='bg-f4f5ff px-9 md:px-20 py-3 rounded-md flex items-center justify-between'>
-          <p className='font-general font-medium text-xs md:text-sm text-383838'>
-            Registrations closed on 
+        <div className="bg-f4f5ff px-9 md:px-20 py-3 rounded-md flex items-center justify-between">
+          <p className="font-general font-medium text-xs md:text-sm text-383838">
+            Registrations closed on
           </p>
-          <span className='text-black font-general font-medium text-xs md:text-sm'>{getDateString(bookingEndDate)}</span>
+          <span className="text-black font-general font-medium text-xs md:text-sm">
+            {getDateString(bookingEndDate)}
+          </span>
         </div>
       );
     } else {
       return (
-        <div className='bg-f4f5ff px-9 md:px-20 py-3 rounded-md space-y-1'>
-          <div className='flex justify-between font-general text-sm text-383838'>
-            <span className='text-black font-general font-medium text-xs md:text-sm'>Registrations Open</span>
-            <span className='text-black font-general font-medium text-xs md:text-sm'>{getDateString(bookingStartDate)}</span>
+        <div className="bg-f4f5ff px-9 md:px-20 py-3 rounded-md space-y-1">
+          <div className="flex justify-between font-general text-sm text-383838">
+            <span className="text-black font-general font-medium text-xs md:text-sm">
+              Registrations Open
+            </span>
+            <span className="text-black font-general font-medium text-xs md:text-sm">
+              {getDateString(bookingStartDate)}
+            </span>
           </div>
-          <div className='flex justify-between font-general text-xs md:text-sm text-383838'>
-            <span className='text-black font-general font-medium text-xs md:text-sm'>Registrations Close</span>
-            <span className='text-black font-general font-medium text-xs md:text-sm'>{getDateString(bookingEndDate)}</span>
+          <div className="flex justify-between font-general text-xs md:text-sm text-383838">
+            <span className="text-black font-general font-medium text-xs md:text-sm">
+              Registrations Close
+            </span>
+            <span className="text-black font-general font-medium text-xs md:text-sm">
+              {getDateString(bookingEndDate)}
+            </span>
           </div>
         </div>
       );
     }
   };
-  
 
   if (!event) {
     return null;
@@ -117,12 +191,16 @@ const SocialEventInfo = ({ event }) => {
       <div className="w-full bg-white px-9 md:px-20 py-10 pb-8 gap-2">
         <div className="flex flex-row items-center justify-between mb-3 md:mb-1">
           <h1 className="text-[24px] md:text-[34px] font-author font-medium text-383838 leading-8 tracking-normal capitalize">
-            {event.eventName || 'Untitled Event'}
+            {event.eventName || "Untitled Event"}
           </h1>
 
           <div className="flex">
             <RWebShare
-              data={{ text: event.eventName || "", url: location.href, title: event.eventName || "" }}
+              data={{
+                text: event.eventName || "",
+                url: location.href,
+                title: event.eventName || "",
+              }}
               onShareWindowClose={() => setIsSharing(false)}
               beforeOpen={() => setIsSharing(true)}
               disabled={isSharing}
@@ -142,20 +220,22 @@ const SocialEventInfo = ({ event }) => {
           {/* Date and Time */}
           {startDate && (
             <div>
-              <p className='font-medium font-general text-sm md:text-base text-383838 md:text-1c0e0e opacity-70'>Duration</p>
+              <p className="font-medium font-general text-sm md:text-base text-383838 md:text-1c0e0e opacity-70">
+                Duration
+              </p>
               <div className="flex items-center gap-2">
                 <img src={CalendarIcon} alt="calendar" className="w-4 h-4" />
                 <span className="font-general font-medium text-sm md:text-base text-1c0e0e capitalize opacity-70">
                   {startDate}
                 </span>
               </div>
-              <div className='w-full h-[1px] bg-f2f2f2 mt-5'></div>
+              <div className="w-full h-[1px] bg-f2f2f2 mt-5"></div>
             </div>
           )}
 
           {/* Location */}
           {event.eventLocation?.address && (
-            <div className='flex items-center justify-between gap-2'>
+            <div className="flex items-center justify-between gap-2">
               <div className="flex items-start gap-1">
                 <img src={Location} alt="location" className="w-4 h-4 mt-1" />
                 <span className="font-general font-medium text-base text-1c0e0e max-w-[230px] max-md:text-sm max-md:max-w-[220px] capitalize opacity-70">
@@ -174,34 +254,74 @@ const SocialEventInfo = ({ event }) => {
           )}
         </div>
       </div>
-
+      {event?.tournamentData?.isFixturePublished ? (
+        <p
+          className="font-general text-sm font-medium text-383838 bg-f4f5ff text-center p-2 cursor-pointer"
+          onClick={handleLiveClick}
+        >
+          <span className="text-244cb4 underline text-sm font-medium font-general">
+            Click here
+          </span>{" "}
+          for Live Tournament Page - Draws, Schedule, Results and Standings
+        </p>
+      ) : (
+        <>
+          {isBookingAllowed ? (
+            <div className="bg-f4f5ff text-center p-2 flex flex-col md:flex-row items-center justify-center gap-2 divide-y md:divide-y-0 md:divide-x divide-gray-400">
+              <p className="font-general text-sm font-medium text-383838 w-full text-center pb-2 md:pb-0 md:pr-2">
+                {bookingDate > today
+                  ? `Registration Opens on - ${formatDate(
+                      event?.bookingStartDate
+                    )}`
+                  : `Registration Opened on - ${formatDate(
+                      event?.bookingStartDate
+                    )}`}
+              </p>
+              <p className="font-general text-sm font-medium text-383838 w-full text-center md:text-left md:pl-2">
+                Registration Closes on - {formatDate(event?.bookingEndDate)}
+              </p>
+            </div>
+          ) : (
+            <p className="font-general text-sm font-medium text-383838 bg-f4f5ff text-center p-2 cursor-pointer">
+              Registration Closed on - {formatDate(event?.bookingEndDate)}
+            </p>
+          )}
+        </>
+      )}
       {/* Registration Status */}
-      <div className="text-383838">
-      {getRegistrationStatus(event.bookingStartDate, event.bookingEndDate)}
-      </div>
+      {/* <div className="text-383838">
+        {getRegistrationStatus(event.bookingStartDate, event.bookingEndDate)}
+      </div> */}
 
       {/* Description */}
       {event.description && (
         <div className="w-full bg-white px-9 md:px-20 py-5 pb-8 gap-2 [&_p_a]:break-words">
-          <div className="prose max-w-none mx-auto font-medium mb-2 font-general text-sm md:text-base text-1c0e0e opacity-70">Description</div>
-          <div className="prose max-w-none mx-auto font-general font-medium text-sm text-383838 opacity-70">{parse(event.description)}</div>
+          <div className="prose max-w-none mx-auto font-medium mb-2 font-general text-sm md:text-base text-1c0e0e opacity-70">
+            Description
+          </div>
+          <div className="prose max-w-none mx-auto font-general font-medium text-sm text-383838 opacity-70">
+            {parse(event.description)}
+          </div>
         </div>
       )}
 
-
       {/* Community Share Section */}
       <div className="w-full bg-white px-9 md:px-20 py-10 pb-8">
-        <div className='flex items-center justify-between flex-wrap gap-2'>
-          <div className='md:max-w-[241px] max-w-full'>
-            <p className='font-author font-medium text-383838 text-2xl'>Let the Community know</p>
-            <p className='font-general font-medium text-xs md:text-sm text-383838 opacity-70'>Social events can be shared with the community with just a tap</p>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="md:max-w-[241px] max-w-full">
+            <p className="font-author font-medium text-383838 text-2xl">
+              Let the Community know
+            </p>
+            <p className="font-general font-medium text-xs md:text-sm text-383838 opacity-70">
+              Social events can be shared with the community with just a tap
+            </p>
           </div>
           <div>
-            <CommunityButton 
-              enableLoader={true} 
-              buttonTitle={'Share On Your Feed'} 
-              handleCommunityButtonClick={handleCreateEventPost} 
-              buttonTitleStyle={`min-w-[190px] font-general font-medium text-383838 cursor-pointer text-sm md:text-base py-2 h-[52px] flex items-center justify-center px-[30px] md:px-3 md:py-5 md:px-6 border border-383838 rounded-3xl`} 
+            <CommunityButton
+              enableLoader={true}
+              buttonTitle={"Share On Your Feed"}
+              handleCommunityButtonClick={handleCreateEventPost}
+              buttonTitleStyle={`min-w-[190px] font-general font-medium text-383838 cursor-pointer text-sm md:text-base py-2 h-[52px] flex items-center justify-center px-[30px] md:px-3 md:py-5 md:px-6 border border-383838 rounded-3xl`}
             />
           </div>
         </div>
@@ -227,10 +347,10 @@ SocialEventInfo.propTypes = {
         line2: PropTypes.string,
         city: PropTypes.string,
         state: PropTypes.string,
-        postalCode: PropTypes.string
-      })
-    })
-  }).isRequired
+        postalCode: PropTypes.string,
+      }),
+    }),
+  }).isRequired,
 };
 
 export default SocialEventInfo;

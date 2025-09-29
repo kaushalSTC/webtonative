@@ -11,7 +11,7 @@ import { trackPaymentStarted, trackPaymentComplete } from '../../../utils/gtm';
 import ErrorMessage from '../../ErrorMessage/ErrorMessage';
 import { verifyPayment } from '../../../api/socialEvent';
 
-const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => {
+const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError, playerFormData }) => {
   const socialEventRegistration = useSelector((state) => state.socialEventRegistration);
   const player = useSelector((state) => state.player);
   const { booking, checkout, order } = socialEventRegistration;
@@ -20,16 +20,17 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
   const navigate = useNavigate();
 
   // Only create endpoints if we have all required IDs
-  const hasRequiredIds = player?.id && checkout?.booking?._id;
-  const PAYMENT_SUCCESS_ENDPOINT = hasRequiredIds 
-    ? `${PLAYER_ENDPOINT}/${player.id}/event-bookings/${checkout.booking._id}/payment-success`
+  const hasRequiredIds = player?.id && checkout?.booking?.bookingId;
+  const PAYMENT_SUCCESS_ENDPOINT = hasRequiredIds
+    ? `${PLAYER_ENDPOINT}/${player.id}/event-bookings/${checkout.booking.bookingId}/payment-success`
     : null;
   const PAYMENT_VERIFICATION_ENDPOINT = hasRequiredIds
-    ? `${PLAYER_ENDPOINT}/${player.id}/event-bookings/${checkout.booking._id}/payment-verification`
+    ? `${PLAYER_ENDPOINT}/${player.id}/event-bookings/${checkout.booking.bookingId}/payment-verification`
     : null;
   const PAY_NOW_ENDPOINT = hasRequiredIds
-    ? `${PLAYER_ENDPOINT}/${player.id}/event-bookings/${checkout.booking._id}/pay-now`
+    ? `${PLAYER_ENDPOINT}/${player.id}/event-bookings/${checkout.booking.bookingId}/pay-now`
     : null;
+  const SUBMIT_FORM_ENDPOINT = `${PLAYER_ENDPOINT}/${player.id}/form-data`
 
   const RAZER_PAY_OPTIONS = order?.amount ? {
     key: `${import.meta.env.VITE_RAZORPAY_KEY_ID}`,
@@ -69,9 +70,9 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
         .then((data) => {
           if (data.status === "success" && checkout?.booking) {
             trackPaymentComplete(
-              checkout.booking._id,
+              checkout.bookingId,
               checkout.booking.finalAmount,
-              null, // No booking items for social events
+              booking.bookingItems,
               response.razorpay_payment_id,
               'success'
             );
@@ -82,7 +83,7 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
             trackPaymentComplete(
               checkout?.booking?._id,
               checkout?.booking?.finalAmount,
-              null,
+              booking.bookingItems,
               response.razorpay_payment_id,
               'failed'
             );
@@ -98,16 +99,16 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
     },
   } : null;
 
-  const { 
-    mutate: createDraftCheckout, 
+  const {
+    mutate: createDraftCheckout,
     isSuccess: isDraftCheckoutCreated,
-    isPending: isDraftCheckoutCreationPending, 
-    isError: isDraftCheckoutCreationError, 
-    error: draftCheckoutCreationError 
+    isPending: isDraftCheckoutCreationPending,
+    isError: isDraftCheckoutCreationError,
+    error: draftCheckoutCreationError
   } = useCreateEventDraftCheckout();
 
-  const { 
-    mutate: createOrderForPayment, 
+  const {
+    mutate: createOrderForPayment,
     isSuccess: isOrderCreatedForPayment,
     isPending: isOrderCreatedForPaymentCreationPending,
     isError: isOrderCreatedForPaymentCreationError,
@@ -115,7 +116,7 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
   } = useCreateOrderForPayment();
 
   const handlePaymentVerification = async (response, checkout) => {
-    if (!response?.razorpay_payment_id || !checkout?.booking?._id || !booking?.playerId) {
+    if (!response?.razorpay_payment_id || !checkout?.booking?.bookingId || !booking?.playerId) {
       createErrorToast("Payment verification failed - missing required data");
       return;
     }
@@ -129,12 +130,12 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
 
       const verifiedBooking = await verifyPayment({
         playerId: booking.playerId,
-        bookingId: checkout.booking._id,
+        bookingId: checkout.booking.bookingId,
         paymentDetails: verificationData
       });
 
       trackPaymentComplete(
-        checkout.booking._id,
+        checkout.bookingId,
         checkout.booking.finalAmount,
         null,
         response.razorpay_payment_id,
@@ -144,7 +145,6 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
       dispatch(setPaymentSuccess(true));
       navigate("/social-events/booking/payment-status");
     } catch (error) {
-      console.error("Payment verification error:", error);
       trackPaymentComplete(
         checkout?.booking?._id,
         checkout?.booking?.finalAmount,
@@ -174,10 +174,10 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
         body: JSON.stringify({
           amount: checkout.booking.finalAmount,
           currency: "INR",
-          receipt: `receipt_${checkout.booking._id}`,
+          receipt: `receipt_${checkout.bookingId}`,
           notes: {
             eventId: booking.eventId,
-            bookingId: booking._id,
+            bookingId: booking.bookingId,
             playerId: booking.playerId,
             amount: checkout.booking.finalAmount
           }
@@ -185,11 +185,10 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
       });
 
       const data = await response.json();
-      
+
       if (data.status === "success" && data.data?.order) {
         const orderData = data.data.order;
         if (window.Razorpay) {
-          console.log('Initializing Razorpay with order:', orderData);
           const rzp = new window.Razorpay({
             key: `${import.meta.env.VITE_RAZORPAY_KEY_ID}`,
             amount: orderData.amount,
@@ -204,7 +203,7 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
             theme: {
               color: "#244CB4",
             },
-            handler: function(response) {
+            handler: function (response) {
               handlePaymentVerification(response, checkout);
             },
           });
@@ -222,8 +221,64 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
     }
   };
 
-  const payNowHandler = () => {
-    if (!booking?.playerId || !booking?.eventId || !booking?._id) {
+  const submitFormData = async () => {
+    try {
+      const formattedData = socialEventRegistration.event.tournamentData.playerFormFields.map((field) => {
+        let value = playerFormData[field.label];
+
+        if (field.type === "Number") {
+          if (value === "" || value === undefined || value === null) {
+            value = null;
+          } else {
+            value = Number(value);
+          }
+        } else if (field.type === "String") {
+          if (value === undefined || value === null) {
+            value = "";
+          } else {
+            value = String(value);
+          }
+        }
+
+        return {
+          label: field.label,
+          value
+        };
+      });
+
+      const res = await fetch(SUBMIT_FORM_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          tournamentId: socialEventRegistration?.event?.tournamentData?._id,
+          playerFormDataResponse: formattedData
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.status !== "success") {
+        throw new Error(data.message || "Failed to submit form");
+      }
+      return true;
+    } catch (err) {
+      createErrorToast(err.message);
+      return false;
+    }
+  };
+
+  const payNowHandler = async () => {
+    if(socialEventRegistration?.event?.tournamentData?.playerFormFields) {
+      const formSaved = await submitFormData();
+      if (!formSaved) return;
+    }
+    const bookingItemsForPayload = booking.bookingItems.map((item) => {
+      return { categoryId: item.categoryId };
+    })
+
+    if (!booking?.playerId || !booking?.eventId || !booking?.bookingId) {
       createErrorToast("Missing required booking information");
       return;
     }
@@ -234,20 +289,21 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
     }
 
     trackPaymentStarted(
-      booking._id,
+      booking.bookingId,
       booking.finalAmount,
-      null // No booking items for social events
+      booking.bookingItems
     );
 
     createDraftCheckout({
       playerId: booking.playerId,
       eventId: booking.eventId,
-      bookingId: booking._id,
+      bookingId: booking.bookingId,
       totalAmount: booking.totalAmount,
       amountAfterDiscount: booking.amountAfterDiscount,
       gstAmount: booking.gstAmount,
       finalAmount: booking.finalAmount,
-      discountAmount: booking.discountAmount || 0
+      discountAmount: booking.discountAmount || 0,
+      bookingItems: bookingItemsForPayload
     });
   };
 
@@ -265,9 +321,10 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
   }, []);
 
   useEffect(() => {
-    if (isDraftCheckoutCreated && checkout?.booking && checkout.booking.finalAmount > 0 && booking?.playerId && booking?._id) {
-      console.log('Creating order after successful draft checkout');
+    if (isDraftCheckoutCreated && checkout?.booking && checkout.booking.finalAmount > 0 && booking?.playerId && booking?.bookingId) {
       createOrder();
+    } else {
+      console.log('draft checkout creation failed');
     }
   }, [isDraftCheckoutCreated, checkout, booking]);
 
@@ -304,14 +361,14 @@ const SocialEventCheckoutBar = ({ isBookingValid, createDraftBookingError }) => 
         </Button>
       </div>
       {isDraftCheckoutCreationError && draftCheckoutCreationError?.message && (
-        <ErrorMessage 
-          message={draftCheckoutCreationError.message} 
+        <ErrorMessage
+          message={draftCheckoutCreationError.message}
           className="text-sm text-red-400 font-general font-medium mt-2 text-center"
         />
       )}
       {isOrderCreatedForPaymentCreationError && orderCreatedForPaymentError?.message && (
-        <ErrorMessage 
-          message={orderCreatedForPaymentError.message} 
+        <ErrorMessage
+          message={orderCreatedForPaymentError.message}
           className="text-sm text-red-400 font-general font-medium mt-2 text-center"
         />
       )}
