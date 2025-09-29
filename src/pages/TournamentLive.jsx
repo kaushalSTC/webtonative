@@ -48,7 +48,7 @@ const TournamentLive = () => {
       return (
         <div
           key={index}
-          style={{ marginBottom: applyMargin ? `${window.innerHeight * 0.1}px` : undefined }}
+          className={applyMargin ? "mb-[10vh]" : ""}
         >
           <item.Component tournament={tournamentData?.tournament} />
         </div>
