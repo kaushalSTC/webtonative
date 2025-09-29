@@ -89,7 +89,7 @@ export const updatePlayerDetails = async (playerID, player) => {
       'Content-Type': 'application/json',
     },
     data: data,
-    withCredentials: true, // ✅ This enables cookies to be sent with the request
+    withCredentials: true, 
   };
 
   try {
