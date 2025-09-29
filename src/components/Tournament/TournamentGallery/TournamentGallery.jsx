@@ -7,7 +7,6 @@ import 'swiper/css/navigation';
 import { Navigation, Mousewheel } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { useSelector } from 'react-redux';
-import { ValidPlatforms } from '../../../constants';
 
 const TournamentGallery = ({ tournament }) => {
   const tournamentGalleryData = tournament.tournamentGallery || [];
@@ -20,16 +19,11 @@ const TournamentGallery = ({ tournament }) => {
     setIsOpen(state);
     setActiveIndex(index);
   };
-  const { platform } = useSelector((state)=> state.wtn);
-  console.log("Platform", platform);
+  
 
   return (
     <>
-      <div
-        className={`w-full bg-white py-10 pb-8 gap-[18px] flex flex-col mt-[10px] ${
-          ValidPlatforms.includes(platform) ? "mb-[200px]" : ""
-        }`}
-      >
+      <div className="w-full bg-white py-10 pb-8 gap-[18px] flex flex-col mt-[10px] ">
         <h2 className="font-general px-9 md:px-20 font-medium text-base text-1c0e0e opacity-70 capitalize">Gallery</h2>
         <div className="flex flex-row justify-between items-center md:gap-[10px] gap-[18px] overflow-x-auto md:pl-[80px] md:pr-[10px] pl-[30px] pr-[6px] [&::-webkit-scrollbar]:hidden">
           {tournamentGalleryData.map((image, index) => (
